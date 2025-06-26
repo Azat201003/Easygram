@@ -11,8 +11,10 @@ find_package(Td 1.8.50 REQUIRED
     NO_DEFAULT_PATH
 )
 
+find_package(ftxui REQUIRED)
+
 # Вместо find_package() добавляем поддиректорию с FTXUI
-add_subdirectory(libs/FTXUI)
+# add_subdirectory(libs/FTXUI)
 
 add_executable(main main.cpp utils/scenes.hpp)
 
