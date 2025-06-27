@@ -16,7 +16,10 @@ find_package(ftxui REQUIRED)
 # Вместо find_package() добавляем поддиректорию с FTXUI
 # add_subdirectory(libs/FTXUI)
 
-add_executable(main main.cpp utils/scenes.hpp)
+add_library(scenes src/scenes.cpp)
+add_library(telegram src/telegram.cpp)
+
+add_executable(main src/main.cpp)
 
 # Линковка со всеми зависимостями
 target_link_libraries(main
@@ -27,4 +30,4 @@ target_link_libraries(main
     ftxui::component
 )
 # add_library(utils STATIC utils/scenes.hpp)
-target_include_directories(main PRIVATE utils)
+# target_include_directories(main PRIVATE utils)

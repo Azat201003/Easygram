@@ -7,7 +7,7 @@ I using free libraries in my code
 #### FTXUI
 Installing release of [FTXUI](https://github.com/ArthurSonzogni/FTXUI/releases) v6.1 and latest. Move it in libs folder
 
-#### TDlib
+#### TDLib
 ```
 cd libs/
 git clone https://github.com/tdlib/td
