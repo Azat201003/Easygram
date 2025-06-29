@@ -1,7 +1,9 @@
-# Building project to build folder
-bld:
-	 mkdir -p build && cmake build -S . -B ./build -DTd_DIR="td" -DCMAKE_BUILD_TYPE=Release && cd ./build && make
+all: bld run # Build and start
 
-# Running builded project from build folder
-run:
+bld: # Building project to build folder
+	mkdir -p build && \
+	cmake build -S . -B ./build -DCMAKE_BUILD_TYPE=Release && \
+	make -C build
+
+run: # Running builded project from build folder
 	cd ./build && ./main

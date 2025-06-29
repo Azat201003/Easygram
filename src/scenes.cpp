@@ -1,8 +1,8 @@
-#pragma once
 #include <ftxui/dom/elements.hpp>
 #include <ftxui/screen/screen.hpp>
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/screen_interactive.hpp>
+#include <logger/logger.h>
 
 #include <vector>
 #include <iostream>
@@ -21,9 +21,10 @@ using namespace std;
 class Scene {
 protected:
     shared_ptr<int> page;
+    Logger* logger;
     ScreenInteractive& screen;
 public:
-    Scene(shared_ptr<int> page, ScreenInteractive& screen) : page(page), screen(screen) {}
+    Scene(shared_ptr<int> page, ScreenInteractive& screen, Logger* logger) : page(page), screen(screen), logger(logger) {}
     virtual ~Scene() = default;
     virtual Component getComponent() = 0;
     virtual Element getElement() = 0;
@@ -35,7 +36,7 @@ private:
     bool phoneSetted = false;
 public:
     string error;
-    LoadingScene(shared_ptr<int> page, ScreenInteractive& screen) : Scene(page, screen) {}
+    LoadingScene(shared_ptr<int> page, ScreenInteractive& screen, Logger* logger) : Scene(page, screen, logger) {}
     Component getComponent() override {
         return Container::Vertical({
             
@@ -60,7 +61,7 @@ private:
     bool phoneSetted = false;
     string error;
 public:
-    PhoneScene(shared_ptr<int> page, ScreenInteractive& screen) : Scene(page, screen) {
+    PhoneScene(shared_ptr<int> page, ScreenInteractive& screen, Logger* logger) : Scene(page, screen, logger) {
         components = make_shared<Components>();
         // Инициализация поля ввода
         components->input_field = Input(&phone, "Enter your phone");
@@ -104,7 +105,7 @@ private:
     string error;
     bool phoneSetted = false;
 public:
-    CodeScene(shared_ptr<int> page, ScreenInteractive& screen) : Scene(page, screen) {
+    CodeScene(shared_ptr<int> page, ScreenInteractive& screen, Logger* logger) : Scene(page, screen, logger) {
         components = make_shared<Components>();
         // Инициализация поля ввода
         components->input_field = Input(&code, "Enter your code");
@@ -147,7 +148,7 @@ private:
     string error;
     bool phoneSetted = false;
 public:
-    PasswordScene(shared_ptr<int> page, ScreenInteractive& screen) : Scene(page, screen) {
+    PasswordScene(shared_ptr<int> page, ScreenInteractive& screen, Logger* logger) : Scene(page, screen, logger) {
         components = make_shared<Components>();
         // Инициализация поля ввода
         components->input_field = Input(&code, "Enter your password");
@@ -182,28 +183,24 @@ class MainScene : public Scene {
 private:
     struct Components {
         Component quit_button;
-        Component back_button;
+        vector<Component> chats;
     };
     shared_ptr<Components> components;
 public:
-    MainScene(shared_ptr<int> page, ScreenInteractive& screen) : Scene(page, screen) {
+    MainScene(shared_ptr<int> page, ScreenInteractive& screen, Logger* logger) : Scene(page, screen, logger) {
         components = make_shared<Components>();
         components->quit_button = Button("Quit", screen.ExitLoopClosure());
-        components->back_button = Button("Back", [page] {
-            (*page.get())--;
-        });
+        // components->chats = ;
     }
     Component getComponent() override {
         return Container::Vertical({
             components->quit_button,
-            components->back_button
         });
     }
     Element getElement() override {
         return vbox({
             text("You are logged in") | color(Color::Green1),
             components->quit_button->Render(),
-            components->back_button->Render(),
             filler(),
         });
     }
@@ -223,14 +220,16 @@ public:
     }
 };
 
-Component getRenderer(ScreenInteractive& screen) {
+Component getRenderer(ScreenInteractive& screen, Logger* logger) {
+
     auto page = make_shared<int>(1);
     vector<shared_ptr<Scene>> scenes;
-    scenes.push_back(make_shared<LoadingScene>(page, screen));
-    scenes.push_back(make_shared<PhoneScene>(page, screen));
-    scenes.push_back(make_shared<CodeScene>(page, screen));
-    scenes.push_back(make_shared<PasswordScene>(page, screen));
-    scenes.push_back(make_shared<MainScene>(page, screen));
+
+    scenes.push_back(make_shared<LoadingScene>(page, screen, logger));
+    scenes.push_back(make_shared<PhoneScene>(page, screen, logger));
+    scenes.push_back(make_shared<CodeScene>(page, screen, logger));
+    scenes.push_back(make_shared<PasswordScene>(page, screen, logger));
+    scenes.push_back(make_shared<MainScene>(page, screen, logger));
     
     vector<Component> components;
     for (auto& scene : scenes) {
@@ -242,15 +241,21 @@ Component getRenderer(ScreenInteractive& screen) {
     static std::atomic<bool> running(true);
     static std::thread worker([page] {
         TdManager& tdManager = TdManager::getInstance();
+    // Timer* timer = static_cast<Timer*>(calloc(sizeof(Timer), 1));
         while (running) {
-            (*page) = tdManager.authState;
+            if (tdManager.changeState != TdManager::ChangingState::LOADING && tdManager.authState != TdManager::AuthState::AUTHENTICATED) {
+                (*page) = tdManager.authState;
+            } else if (tdManager.changeState == TdManager::ChangingState::LOADING) {
+                (*page) = 0; // loading scene
+            } else {
+                (*page) = 4;
+            }
             tdManager.update_response();
             
             std::this_thread::sleep_for(100ms); // Интервал обновления
         }
     });
 
-    // Timer* timer = static_cast<Timer*>(calloc(sizeof(Timer), 1));
     return Renderer(container, [scenes, page] {
         return scenes.at(*page)->getElement() 
             | border 
