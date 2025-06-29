@@ -38,14 +38,19 @@ public:
 
 
 class LoadingScene : public Scene {
+private:
+    int n = 0;
+    const char chars[25] = "!$XLW)!*#:D&!)!)XPZ:pqix";
 public:
     LoadingScene(shared_ptr<int> page, ScreenInteractive& screen, Logger* logger) : Scene(page, screen, logger) {}
     Component getComponent() override {
         return Container::Vertical({});
     }
     Element getElement() override {
+        n++;
+        n%=25;
         return vbox({
-            text(" Loading... ") | center,
+            text(" Loading... " + string({chars[n]}) + " ") | center,
         });
     }
 };
