@@ -66,7 +66,7 @@ public:
     AuthState authState = AuthState::TDLIB_PARAMS;
     ChangingState changeState = ChangingState::ENTERING;
     std::string error;
-    // vector<chat> chats;
+    std::map<std::int64_t, td_api::object_ptr<td_api::chat>> chats_;
 private:
     Logger* logger = new Logger();
     auto create_authentication_query_handler(string* error) {
@@ -77,6 +77,7 @@ private:
                 changeState = ChangingState::ERROR;
             }
         };
+        // chats_[0].get()->id_
     }
 public:
     void setLogger(Logger* logger) {
@@ -139,6 +140,16 @@ private:
                                     authState = AuthState::AUTHENTICATED;
                                     idAuthed = true;
                                     logger->named<TdManager>("Authorization is completed");
+                                    send_query(td_api::make_object<td_api::getChats>(td_api::make_object<td_api::chatListMain>(), 100), [this] (Object object) {
+                                        if (object->get_id() == td_api::error::ID) {
+                                            return;
+                                        }
+                                        for (auto chat_id : td::move_tl_object_as<td_api::chats>(object)->chat_ids_) {
+                                            send_query(td_api::make_object<td_api::getChat>(chat_id), [this, chat_id] (Object object) {
+                                                this->chats_[chat_id] = td::move_tl_object_as<td_api::chat>(object);
+                                            });
+                                        }
+                                    });
                                 },
                                 [this](td_api::authorizationStateLoggingOut &) {
                                     idAuthed = false;
@@ -218,6 +229,7 @@ private:
             on_authorization_state_update();
             return error;
         }
+        return "";
     }
 
 
@@ -246,10 +258,11 @@ private:
                     on_authorization_state_update();
                 },
                 [this](td_api::updateNewChat &update_new_chat) {
+                    chats_[update_new_chat.chat_->id_] = std::move(update_new_chat.chat_);
                     // chat_title_[update_new_chat.chat_->id_] = update_new_chat.chat_->title_;
                 },
                 [this](td_api::updateChatTitle &update_chat_title) {
-                    // chat_title_[update_chat_title.chat_id_] = update_chat_title.title_;
+                    chats_[update_chat_title.chat_id_]->title_ = update_chat_title.title_;
                 },
                 [this](td_api::updateUser &update_user) {
                     auto user_id = update_user.user_->id_;

@@ -2,16 +2,22 @@
 #include <ftxui/screen/screen.hpp>
 #include <ftxui/component/component.hpp>
 #include <ftxui/component/screen_interactive.hpp>
+
 #include <logger/logger.h>
 
 #include <vector>
 #include <iostream>
 #include <memory>
 #include <string>
-#include <functional> // Добавлено для std::function
+#include <functional>
 #include <fstream>
 #include <thread>
 #include <atomic>
+#include <sys/ioctl.h>
+#include <stdio.h>
+#include <unistd.h>
+#include <cmath>
+#include <algorithm>
 
 #include "telegram.cpp"
 
@@ -32,19 +38,14 @@ public:
 
 
 class LoadingScene : public Scene {
-private:
-    bool phoneSetted = false;
 public:
-    string error;
     LoadingScene(shared_ptr<int> page, ScreenInteractive& screen, Logger* logger) : Scene(page, screen, logger) {}
     Component getComponent() override {
-        return Container::Vertical({
-            
-        });
+        return Container::Vertical({});
     }
     Element getElement() override {
         return vbox({
-            text("Loading..."),
+            text(" Loading... ") | center,
         });
     }
 };
@@ -58,14 +59,11 @@ private:
     };
     shared_ptr<Components> components;
     string phone;
-    bool phoneSetted = false;
     string error;
 public:
     PhoneScene(shared_ptr<int> page, ScreenInteractive& screen, Logger* logger) : Scene(page, screen, logger) {
         components = make_shared<Components>();
-        // Инициализация поля ввода
         components->input_field = Input(&phone, "Enter your phone");
-        // Кнопка выхода с действием
         components->quit_button = Button("Quit", screen.ExitLoopClosure());
         components->continue_button = Button("Continue", [this] {
             TdManager::getInstance().setPhoneNumber(phone, &error);
@@ -103,13 +101,10 @@ private:
     shared_ptr<Components> components;
     string code;
     string error;
-    bool phoneSetted = false;
 public:
     CodeScene(shared_ptr<int> page, ScreenInteractive& screen, Logger* logger) : Scene(page, screen, logger) {
         components = make_shared<Components>();
-        // Инициализация поля ввода
         components->input_field = Input(&code, "Enter your code");
-        // Кнопка выхода с действием
         components->quit_button = Button("Quit", screen.ExitLoopClosure());
         components->continue_button = Button("Continue", [this] {
             TdManager::getInstance().setCode(code, &error);
@@ -144,18 +139,15 @@ private:
         Component quit_button;
     };
     shared_ptr<Components> components;
-    string code;
+    string password;
     string error;
-    bool phoneSetted = false;
 public:
     PasswordScene(shared_ptr<int> page, ScreenInteractive& screen, Logger* logger) : Scene(page, screen, logger) {
         components = make_shared<Components>();
-        // Инициализация поля ввода
-        components->input_field = Input(&code, "Enter your password");
-        // Кнопка выхода с действием
+        components->input_field = Input(&password, "Enter your password");
         components->quit_button = Button("Quit", screen.ExitLoopClosure());
         components->continue_button = Button("Continue", [this] {
-            TdManager::getInstance().setPassword(code, &error);
+            TdManager::getInstance().setPassword(password, &error);
         });
     }
     Component getComponent() override {
@@ -183,40 +175,116 @@ class MainScene : public Scene {
 private:
     struct Components {
         Component quit_button;
-        vector<Component> chats;
+        Component chat_list;
+        Component folders;
+        Component chat;
     };
     shared_ptr<Components> components;
+    vector<string> chat_titles;
+    vector<string> visible_chat_titles;
+    vector<string> folder_titles;
+    int selected_chat = 0;
+    int selected_visible_chat = 0;
+    int selected_folder = 0;
+    int chatMenuStart = 0;
+    
+    bool isArchived(const td_api::chat& chat) {
+        for (const auto& chatList : chat.chat_lists_) {
+            if (chatList && chatList->get_id() == td_api::chatListArchive::ID) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void updateChatList() {
+        chat_titles.clear();
+        auto& tdManager = TdManager::getInstance();
+        for (const auto& chat_pair : tdManager.chats_) {
+            if (chat_pair.second && !isArchived(*chat_pair.second)) {
+                chat_titles.push_back(chat_pair.second->title_);
+            }
+        }
+        if (chat_titles.empty()) {
+            chat_titles.push_back("No chats available");
+        }
+
+        struct winsize w;
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+
+        visible_chat_titles.clear();
+
+        for (int i = max(0, chatMenuStart); i < max(0, int(min(int(this->chat_titles.size()), chatMenuStart+w.ws_row-9))); i++) {
+            visible_chat_titles.push_back(this->chat_titles.at(i));
+        }
+    }
+
+    MenuOption createAutoscrolled() {
+        shared_ptr<MenuOption> option = make_shared<MenuOption>();
+        (*option) = MenuOption::VerticalAnimated();
+        option->on_change = [this, option] {
+            struct winsize w;
+            ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+            // if ((chatMenuStart != 0 || selected_visible_chat != 0) && (chatMenuStart + w.ws_row - 11 != chat_titles.size() || selected_visible_chat != this->selected_chat + w.ws_row - 11)) {
+                selected_chat = selected_visible_chat + this->chatMenuStart;
+                // }
+            int delta = max(0, max(min(this->chatMenuStart, this->selected_chat-1), this->selected_chat - w.ws_row + 11)) - this->chatMenuStart;
+            this->chatMenuStart += delta;
+            if (delta > 0) {
+                selected_visible_chat -= 1;
+            }
+            if (delta < 0) {
+                selected_visible_chat += 1;
+            }
+            this->logger->debug("this->selected_visible_chat - w.ws_row + 11 = " + to_string(this->selected_visible_chat - w.ws_row + 11));
+            this->logger->debug("chatMenuStart = " + to_string(this->chatMenuStart) + string("\n\tint(this->chat_titles.size()) = ") + to_string(int(this->chat_titles.size())));
+            // option->entries = {};
+            this->logger->debug(to_string(max(0, int(min(int(this->chat_titles.size()), chatMenuStart+w.ws_row)))));
+            // vector<string> entries;
+            // option->entries = entries;
+            // option->entries = vector<std::copy(chat_titles.begin() + chatMenuStart, chat_titles.begin()+chatMenuStart+w.ws_row, std::back_inserter(chat_titles))>;
+        };
+        return *option;
+    }
+
 public:
     MainScene(shared_ptr<int> page, ScreenInteractive& screen, Logger* logger) : Scene(page, screen, logger) {
         components = make_shared<Components>();
         components->quit_button = Button("Quit", screen.ExitLoopClosure());
-        // components->chats = ;
+        updateChatList();
+        components->chat_list = Menu(&visible_chat_titles, &selected_visible_chat, createAutoscrolled());
+        components->folders = Menu(&folder_titles, &selected_folder);
+        // components->chat = Menu();
     }
     Component getComponent() override {
         return Container::Vertical({
+            components->chat_list,
             components->quit_button,
+            // components->chat,
         });
     }
+    
     Element getElement() override {
-        return vbox({
-            text("You are logged in") | color(Color::Green1),
-            components->quit_button->Render(),
-            filler(),
-        });
-    }
-};
+        updateChatList();
+        struct winsize w;
+        ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+        return hbox({
+            vbox({
+                text("chats") | bold | center,
+                separator(),
+                components->chat_list->Render() | border | size(HEIGHT, EQUAL, w.ws_row-10) | vscroll_indicator | flex,
+                separator(),
+                // hbox({
+                //     text("Selected: ") | bold,
+                //     text(selected_chat < chat_titles.size() ? chat_titles[selected_chat] : "None")
+                // }),
+                // filler(),
+                components->quit_button->Render() | center | size(WIDTH, EQUAL, 200),
+            }) | size(WIDTH, EQUAL, 30),
+            vbox({
 
-class Timer {
-public:
-    const int INTERVAL = 4;
-    time_t last_call;
-    Timer() {
-        last_call = time(nullptr);
-    }
-    bool timeCome() {
-        time_t current = time(nullptr);
-        last_call = current;
-        return current - last_call >= INTERVAL;
+            }) | size(WIDTH, EQUAL, w.ws_col-30)
+        }) | size(HEIGHT, EQUAL, w.ws_row);
     }
 };
 
@@ -241,25 +309,22 @@ Component getRenderer(ScreenInteractive& screen, Logger* logger) {
     static std::atomic<bool> running(true);
     static std::thread worker([page] {
         TdManager& tdManager = TdManager::getInstance();
-    // Timer* timer = static_cast<Timer*>(calloc(sizeof(Timer), 1));
         while (running) {
             if (tdManager.changeState != TdManager::ChangingState::LOADING && tdManager.authState != TdManager::AuthState::AUTHENTICATED) {
                 (*page) = tdManager.authState;
             } else if (tdManager.changeState == TdManager::ChangingState::LOADING) {
-                (*page) = 0; // loading scene
+                (*page) = 0;
             } else {
                 (*page) = 4;
             }
             tdManager.update_response();
-            
-            std::this_thread::sleep_for(100ms); // Интервал обновления
+            std::this_thread::sleep_for(100ms);
         }
     });
 
     return Renderer(container, [scenes, page] {
         return scenes.at(*page)->getElement() 
-            | border 
-            | size(HEIGHT, LESS_THAN, 10) 
+            | border
             | center;
     });
 }

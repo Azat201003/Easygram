@@ -11,20 +11,20 @@
 
 using namespace ftxui;
 
-ofstream log;
+ofstream log_file;
 
 void printLog(string text) {
-  log << text;
+  log_file << text;
 }
 
 int main() {
   auto screen = ScreenInteractive::Fullscreen();
 
   // cout << "hello world";
-  log.open("log", std::ios_base::trunc);
-  log.close();
-  log.open("log", std::ios_base::app);
-  if (!log.is_open()) {
+  log_file.open("log", std::ios_base::trunc);
+  log_file.close();
+  log_file.open("log", std::ios_base::app);
+  if (!log_file.is_open()) {
     Logger().system(Logger::SystemMessages::STOP);
     return 0;
   }
@@ -41,6 +41,6 @@ int main() {
 
   screen.Loop(getRenderer(screen, logger));
   logger->system(Logger::SystemMessages::STOP);
-  log.close();
+  log_file.close();
   return 0;
 }
