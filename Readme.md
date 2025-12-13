@@ -4,20 +4,10 @@ It is TUI telegram client created for programmers. I want to add here much feutu
 
 ## Prerequirements
 
-I using free libraries in my code. If there are some errors you can change CMakeLists.txt, because it is in develop
+I using free libraries in my code. You need to install next ones:
 
-### TDLib
-
-``` bash
-cd libs/
-git clone https://github.com/tdlib/td
-cd td/
-mkdir build
-cd build/
-cmake -DCMAKE_INSTALL_PREFIX=/usr/local -DCMAKE_BUILD_TYPE=Release ..
-make
-make install
-```
+ - [TDLib](https://github.com/tdlib/td)
+ - [logger](https://github.com/Azat201003/logger)
 
 ## Building
 

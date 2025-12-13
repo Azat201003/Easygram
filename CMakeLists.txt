@@ -3,48 +3,40 @@ project(Easygram VERSION 1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-find_package(Td 1.8.50 REQUIRED
-    # PATHS "${CMAKE_CURRENT_SOURCE_DIR}/libs/td/install/lib/cmake/Td"
-    # NO_DEFAULT_PATH
-)
+find_package(Td REQUIRED)
+find_package(logger REQUIRED)
 
 include(FetchContent)
 
-FetchContent_Declare(
-  logger
-  GIT_REPOSITORY https://github.com/Azat201003/logger.git
-  GIT_TAG        v1.1.9
-)
-FetchContent_MakeAvailable(logger)
+set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
+set(FETCHCONTENT_QUIET OFF)
 
-# FetchContent_Declare(
-#   Td
-#   GIT_REPOSITORY https://github.com/tdlib/td.git
-#   GIT_TAG        v1.8.0
-# )
-# FetchContent_MakeAvailable(Td)
-
-FetchContent_Declare(
-  ftxui
-  GIT_REPOSITORY https://github.com/ArthurSonzogni/FTXUI.git
-  GIT_TAG        v6.1.0
+FetchContent_Declare(ftxui
+  GIT_REPOSITORY https://github.com/arthursonzogni/ftxui.git
+  GIT_TAG        v5.0.0
+  GIT_PROGRESS   TRUE
+  GIT_SHALLOW    TRUE
+  EXCLUDE_FROM_ALL
 )
 FetchContent_MakeAvailable(ftxui)
 
-
-# find_package(ftxui REQUIRED)
-
-add_library(scenes src/scenes.cpp)
-add_library(telegram src/telegram.cpp)
-
 add_executable(main src/main.cpp)
 
+target_include_directories(main PRIVATE src)
+
 target_link_libraries(main
-    PRIVATE
-    Td::TdStatic          
-    ftxui::screen         
-    ftxui::dom
-    ftxui::component
+    PRIVATE ftxui::screen
+    PRIVATE ftxui::dom
+    PRIVATE ftxui::component
     logger
+    PRIVATE Td::TdStatic
 )
+
+if (EMSCRIPTEN)
+  string(APPEND CMAKE_CXX_FLAGS " -s USE_PTHREADS")
+  string(APPEND CMAKE_EXE_LINKER_FLAGS " -s ASYNCIFY")
+  string(APPEND CMAKE_EXE_LINKER_FLAGS " -s PROXY_TO_PTHREAD")
+endif()
