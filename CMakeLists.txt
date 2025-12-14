@@ -23,7 +23,16 @@ FetchContent_Declare(ftxui
 )
 FetchContent_MakeAvailable(ftxui)
 
-add_executable(main src/main.cpp)
+add_executable(main
+    src/main.cpp
+    src/scenes/LoadingScene.cpp
+    src/scenes/PhoneScene.cpp
+    src/scenes/CodeScene.cpp
+    src/scenes/PasswordScene.cpp
+    src/scenes/MainScene.cpp
+    src/scenes/Renderer.cpp
+    src/telegram.cpp
+)
 
 target_include_directories(main PRIVATE src)
 

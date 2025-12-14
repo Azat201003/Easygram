@@ -18,8 +18,8 @@ Component getRenderer(ScreenInteractive &screen, Logger *logger) {
 
   static std::atomic<bool> running(true);
   static std::thread worker([scenes, page] {
-    TdManager &tdManager = TdManager::getInstance();
     while (running) {
+      TdManager &tdManager = TdManager::getInstance();
       if (tdManager.changeState != TdManager::ChangingState::LOADING &&
           tdManager.authState != TdManager::AuthState::AUTHENTICATED) {
         (*page) = tdManager.authState;
@@ -28,9 +28,14 @@ Component getRenderer(ScreenInteractive &screen, Logger *logger) {
       } else {
         (*page) = 4;
       }
-      scenes[*page]->ping();
-      tdManager.update_response();
-      std::this_thread::sleep_for(100ms);
+       scenes[*page]->ping();
+       std::this_thread::sleep_for(100ms);
+    }
+  });
+  static std::thread updater([] () {
+    while (running) {
+      TdManager &tdManager = TdManager::getInstance(); 
+       tdManager.update_response();
     }
   });
 
@@ -42,4 +47,5 @@ Component getRenderer(ScreenInteractive &screen, Logger *logger) {
             return true;
         }
         return false;
-    });}
+    });
+}

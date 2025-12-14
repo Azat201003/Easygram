@@ -14,6 +14,7 @@
 #include <sstream>
 #include <string>
 #include <vector>
+#include <thread>
 
 using namespace std;
 
@@ -81,7 +82,7 @@ public:
     static TdManager instance;
     return instance;
   }
-  void update_response() { process_response(client_manager_->receive(15)); }
+  void update_response() { process_response(client_manager_->receive(3)); }
 
   void setPhoneNumber(string phone, string *error) {
     changeState = ChangingState::LOADING;
@@ -155,15 +156,16 @@ private:
                            //      });
                            //}
 //                         });
-  
+                static std::thread loadChats([this] () {
                 send_query(td_api::make_object<td_api::loadChats>(
                             td_api::make_object<td_api::chatListMain>(), 100), 
                         [this] (Object object) {
                             if (object->get_id() == td_api::error::ID) {
-                                logger->error("loading chats error");
+                                this->logger->error("loading chats error");
                                 return;
                             }
                         });
+                });
             },
             [this](td_api::authorizationStateLoggingOut &) {
               idAuthed = false;
