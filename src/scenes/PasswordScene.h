@@ -1,7 +1,7 @@
 #pragma once
 
-#include "../telegram.cpp"
-#include "Scene.h"
+#include <telegram.cpp>
+#include <scenes/Scene.h>
 
 #include <memory>
 #include <string>

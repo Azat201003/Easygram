@@ -1,4 +1,4 @@
-#include "PasswordScene.h"
+#include <scenes/PasswordScene.h>
 
 PasswordScene::PasswordScene(std::shared_ptr<int> page,
                              ScreenInteractive &screen, Logger *logger)

@@ -23,6 +23,10 @@ FetchContent_Declare(ftxui
 )
 FetchContent_MakeAvailable(ftxui)
 
+include_directories(src)
+
+file(GLOB_RECURSE SOURCES "src/*.cpp")
+
 add_executable(main
     src/main.cpp
     src/scenes/LoadingScene.cpp
@@ -31,6 +35,8 @@ add_executable(main
     src/scenes/PasswordScene.cpp
     src/scenes/MainScene.cpp
     src/scenes/Renderer.cpp
+		src/telegram/processor.cpp
+		src/telegram/sender.cpp
     src/telegram.cpp
 )
 

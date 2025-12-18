@@ -1,4 +1,4 @@
-#include "LoadingScene.h"
+#include <scenes/LoadingScene.h>
 
 #include <string>
 

@@ -11,13 +11,13 @@
 #include <thread>
 #include <vector>
 
-#include "../telegram.cpp"
-#include "CodeScene.h"
-#include "LoadingScene.h"
-#include "MainScene.h"
-#include "PasswordScene.h"
-#include "PhoneScene.h"
-#include "Scene.h"
+#include <telegram.cpp>
+#include <scenes/CodeScene.h>
+#include <scenes/LoadingScene.h>
+#include <scenes/MainScene.h>
+#include <scenes/PasswordScene.h>
+#include <scenes/PhoneScene.h>
+#include <scenes/Scene.h>
 
 using namespace ftxui;
 
