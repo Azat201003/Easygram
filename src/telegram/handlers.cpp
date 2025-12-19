@@ -1,11 +1,6 @@
 #include "handlers.h"
 
-std::uint64_t HandlerManager::next_query_id() {
-	return ++current_query_id_;
-}
-
-void HandlerManager::addHandler(std::function<void(Object)> handler) {
-  auto query_id = next_query_id();
+void HandlerManager::add_handler(std::uint64_t id, std::function<void(Object)> handler) {
 	if (handler)	
 		handlers_[id] = handler;
 }

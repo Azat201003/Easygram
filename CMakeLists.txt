@@ -28,26 +28,27 @@ include_directories(src)
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
 add_executable(main
-    src/main.cpp
-    src/scenes/LoadingScene.cpp
-    src/scenes/PhoneScene.cpp
-    src/scenes/CodeScene.cpp
-    src/scenes/PasswordScene.cpp
-    src/scenes/MainScene.cpp
-    src/scenes/Renderer.cpp
-		src/telegram/processor.cpp
-		src/telegram/sender.cpp
-    src/telegram.cpp
+	src/main.cpp
+	src/scenes/LoadingScene.cpp
+	src/scenes/PhoneScene.cpp
+	src/scenes/CodeScene.cpp
+	src/scenes/PasswordScene.cpp
+	src/scenes/MainScene.cpp
+	src/scenes/Renderer.cpp
+	src/telegram/processor.cpp
+	src/telegram/sender.cpp
+	src/telegram/handlers.cpp
+	src/telegram.cpp
 )
 
 target_include_directories(main PRIVATE src)
 
 target_link_libraries(main
-    PRIVATE ftxui::screen
-    PRIVATE ftxui::dom
-    PRIVATE ftxui::component
-    logger
-    PRIVATE Td::TdStatic
+	PRIVATE ftxui::screen
+	PRIVATE ftxui::dom
+	PRIVATE ftxui::component
+	logger
+	PRIVATE Td::TdStatic
 )
 
 if (EMSCRIPTEN)

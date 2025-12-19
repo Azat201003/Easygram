@@ -8,6 +8,7 @@
 #include <functional>
 
 #include <telegram/sender.h>
+#include <telegram/handlers.h>
 
 namespace td_api = td::td_api;
 using Object = td_api::object_ptr<td_api::Object>;
@@ -22,6 +23,7 @@ private:
 public:
 	Logger* logger = new Logger();
 	Sender* sender;
+	HandlerManager* handler_manager;
 	std::string error;
 	std::map<std::int64_t, td_api::object_ptr<td_api::chat>> chats_;
 	void process_response(td::ClientManager::Response response);
