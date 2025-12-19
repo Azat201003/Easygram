@@ -28,16 +28,16 @@ include_directories(src)
 file(GLOB_RECURSE SOURCES "src/*.cpp")
 
 add_executable(main
-	src/main.cpp
-	src/scenes/LoadingScene.cpp
-	src/scenes/PhoneScene.cpp
-	src/scenes/CodeScene.cpp
-	src/scenes/PasswordScene.cpp
-	src/scenes/MainScene.cpp
-	src/scenes/Renderer.cpp
+	src/scenes/load.cpp
+	src/scenes/phone.cpp
+	src/scenes/code.cpp
+	src/scenes/password.cpp
+	src/scenes/main.cpp
 	src/telegram/processor.cpp
 	src/telegram/sender.cpp
 	src/telegram/handlers.cpp
+	src/main.cpp
+	src/renderer.cpp
 	src/telegram.cpp
 )
 

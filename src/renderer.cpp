@@ -1,4 +1,4 @@
-#include <scenes/Renderer.h>
+#include <renderer.h>
 
 Component getRenderer(ScreenInteractive &screen, Logger *logger) {
   auto page = std::make_shared<int>(1);

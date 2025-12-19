@@ -1,25 +1,25 @@
-#include <scenes/PasswordScene.h>
+#include <scenes/phone.h>
 
-PasswordScene::PasswordScene(std::shared_ptr<int> page,
-                             ScreenInteractive &screen, Logger *logger)
+PhoneScene::PhoneScene(std::shared_ptr<int> page, ScreenInteractive &screen,
+                       Logger *logger)
     : Scene(page, screen, logger) {
   components = std::make_shared<Components>();
-  components->input_field = Input(&password, "Enter your password");
+  components->input_field = Input(&phone, "Enter your phone");
   components->quit_button = Button("Quit", screen.ExitLoopClosure());
   components->continue_button = Button("Continue", [this] {
-    TdManager::getInstance().setPassword(password, &error);
+    TdManager::getInstance().setPhoneNumber(phone, &error);
   });
 }
 
-Component PasswordScene::getComponent() {
+Component PhoneScene::getComponent() {
   return Container::Vertical({components->input_field,
                               components->continue_button,
                               components->quit_button});
 }
 
-Element PasswordScene::getElement() {
+Element PhoneScene::getElement() {
   return vbox({
-      hbox(text(" Login password: ") | bold,
+      hbox(text(" Login telegram with phone: ") | bold,
            components->input_field->Render()) |
           border | size(WIDTH, EQUAL, 50),
       filler(),

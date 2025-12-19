@@ -6,7 +6,7 @@
 
 #include <fstream>
 
-#include <scenes/Renderer.h>
+#include <renderer.h>
 #include <telegram.cpp>
 
 using namespace ftxui;

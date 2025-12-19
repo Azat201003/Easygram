@@ -1,7 +1,7 @@
 #pragma once
 
 #include <telegram.cpp>
-#include <scenes/Scene.h>
+#include <scenes/scene.h>
 
 #include <algorithm>
 #include <cstdint>

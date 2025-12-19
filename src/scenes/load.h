@@ -1,6 +1,6 @@
 #pragma once
 
-#include <scenes/Scene.h>
+#include <scenes/scene.h>
 
 class LoadingScene : public Scene {
 private:

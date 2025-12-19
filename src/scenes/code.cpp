@@ -1,4 +1,4 @@
-#include <scenes/CodeScene.h>
+#include <scenes/code.h>
 
 CodeScene::CodeScene(std::shared_ptr<int> page, ScreenInteractive &screen,
                      Logger *logger)

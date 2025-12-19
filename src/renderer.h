@@ -12,12 +12,12 @@
 #include <vector>
 
 #include <telegram.cpp>
-#include <scenes/CodeScene.h>
-#include <scenes/LoadingScene.h>
-#include <scenes/MainScene.h>
-#include <scenes/PasswordScene.h>
-#include <scenes/PhoneScene.h>
-#include <scenes/Scene.h>
+#include <scenes/code.h>
+#include <scenes/load.h>
+#include <scenes/main.h>
+#include <scenes/password.h>
+#include <scenes/phone.h>
+#include <scenes/scene.h>
 
 using namespace ftxui;
 
