@@ -23,6 +23,7 @@ public:
   virtual Component getComponent() = 0;
   virtual Element getElement() = 0;
   void ping() {
+		logger->named<Scene>("Ping");
     screen.PostEvent(Event::Special("Ping"));
   }
 };

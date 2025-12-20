@@ -5,6 +5,7 @@
 #include <map>
 #include <functional>
 #include <telegram/handlers.h>
+#include <logger/logger.h>
 
 namespace td_api = td::td_api;
 
@@ -16,7 +17,9 @@ private:
 	std::uint64_t next_query_id();
 	std::unique_ptr<td::ClientManager> client_manager_;
 public:
+	Sender(Logger*, HandlerManager*, std::unique_ptr<td::ClientManager>);
 	HandlerManager* handler_manager;
+	Logger* logger;
   void send_query(td_api::object_ptr<td_api::Function> f,
                 std::function<void(Object)> handler);
 };

@@ -36,6 +36,7 @@ add_executable(main
 	src/telegram/processor.cpp
 	src/telegram/sender.cpp
 	src/telegram/handlers.cpp
+	src/telegram/facade.cpp
 	src/main.cpp
 	src/renderer.cpp
 	src/telegram.cpp

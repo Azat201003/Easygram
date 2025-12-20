@@ -21,6 +21,13 @@ template <class... F> auto overloaded(F... f) {
   return detail::overload<F...>(f...);
 }
 
+Processor::Processor(Logger* logger_, HandlerManager* handler_manager_, Sender* sender_, std::unique_ptr<td::ClientManager> client_manager) {
+	this->logger = logger_;
+	this->handler_manager = handler_manager_;
+	this->sender = sender_;
+	this->client_manager_ = std::move(client_manager);
+}
+
 void Processor::process_response(td::ClientManager::Response response) {
 	if (!response.object) {
 		logger->named<Processor>("No response");
@@ -196,3 +203,12 @@ std::function<void(Object)> Processor::create_authentication_query_handler(strin
     }
 	};
 }
+
+void Processor::update_response() {
+	td::ClientManager::Response response;
+  do {
+	  response = client_manager_->receive(1);
+  	process_response(std::move(response));
+	} while (response.object);
+}
+
