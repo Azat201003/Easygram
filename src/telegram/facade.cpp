@@ -4,11 +4,10 @@ TgFacade::TgFacade(Logger* logger) {
 	td::ClientManager::execute(
 			td_api::make_object<td_api::setLogVerbosityLevel>(0));
 	HandlerManager* handler_manager = new HandlerManager(logger);
-	auto client_manager1 = std::make_unique<td::ClientManager>();
-	sender = new Sender(logger, handler_manager, std::move(client_manager1));
-	auto client_manager2 = std::make_unique<td::ClientManager>();
-	processor = new Processor(logger, handler_manager, sender, std::move(client_manager2));
+	sender		= new TgSender(logger, handler_manager);
+	processor	= new Processor(logger, handler_manager, sender);
 	changeState = ChangingState::ENTERING;
+	sender->send_query(td_api::make_object<td_api::getOption>("version"), {});
 }
 
 TgFacade& TgFacade::getInstance(Logger* logger) {

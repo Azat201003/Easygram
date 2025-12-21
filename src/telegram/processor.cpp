@@ -3,6 +3,8 @@
 #include <config.h>
 #include <thread>
 
+std::map<std::int64_t, td_api::object_ptr<td_api::chat>> chats;
+
 namespace detail {
 template <class... Fs> struct overload;
 
@@ -21,11 +23,11 @@ template <class... F> auto overloaded(F... f) {
   return detail::overload<F...>(f...);
 }
 
-Processor::Processor(Logger* logger_, HandlerManager* handler_manager_, Sender* sender_, std::unique_ptr<td::ClientManager> client_manager) {
+Processor::Processor(Logger* logger_, HandlerManager* handler_manager_, TgSender* sender_) {
 	this->logger = logger_;
 	this->handler_manager = handler_manager_;
 	this->sender = sender_;
-	this->client_manager_ = std::move(client_manager);
+	this->client_manager_ = td::ClientManager::get_manager_singleton();
 }
 
 void Processor::process_response(td::ClientManager::Response response) {
@@ -51,13 +53,13 @@ void Processor::process_update(Object update) {
 				on_authorization_state_update();
 			},
 			[this](td_api::updateNewChat &update_new_chat) {
-				chats_[update_new_chat.chat_->id_] =
+				::chats[update_new_chat.chat_->id_] =
 					std::move(update_new_chat.chat_);
 				logger->debug("Update new chat handled");
 			},
 			[this](td_api::updateChatPosition &update_chat_position) {
-				auto chat_it = chats_.find(update_chat_position.chat_id_);
-				if (chat_it != chats_.end()) {
+				auto chat_it = ::chats.find(update_chat_position.chat_id_);
+				if (chat_it != ::chats.end()) {
 					auto chat = chat_it->second.get();
 					if (chat) {
 						bool found = false;
@@ -76,7 +78,7 @@ void Processor::process_update(Object update) {
 				logger->debug("Update chat position handled");
 			},
 			[this](td_api::updateChatTitle &update_chat_title) {
-				chats_[update_chat_title.chat_id_]->title_ =
+				::chats[update_chat_title.chat_id_]->title_ =
 						update_chat_title.title_;
 			},
 			[this](td_api::updateUser &update_user) {
@@ -103,12 +105,12 @@ void Processor::process_update(Object update) {
 
 void Processor::on_authorization_state_update() {
 	authentication_query_id_++;
-	state::changeState = state::ChangingAuthState::ENTERING;
+	State::changeState = State::ChangingAuthState::ENTERING;
 	td_api::downcast_call(
 		*authorization_state_,
 		overloaded(
 			[this](td_api::authorizationStateReady &) {
-				state::authState = state::AuthState::AUTHENTICATED;
+				State::authState = State::AuthState::AUTHENTICATED;
 				logger->named<Processor>("Authorization is completed");
 					static std::thread loadChats([this] () {
 						sender->send_query(td_api::make_object<td_api::loadChats>(
@@ -123,20 +125,20 @@ void Processor::on_authorization_state_update() {
 					});
 			},
 			[this](td_api::authorizationStateLoggingOut &) {
-				state::authState = state::AuthState::CLOSED;
+				State::authState = State::AuthState::CLOSED;
 				logger->named<Processor>("Logging out");
 			},
 			[this](td_api::authorizationStateClosing &) {
 				logger->named<Processor>("closed");
 			},
 			[this](td_api::authorizationStateClosed &) {
-				state::authState = state::AuthState::CLOSED;
-				state::needRestart = true;
+				State::authState = State::AuthState::CLOSED;
+				State::needRestart = true;
 				logger->named<Processor>("Terminated");
 			},
 			[this](td_api::authorizationStateWaitPhoneNumber &) {
 				logger->named<Processor>("Entering phone number");
-				state::authState = state::AuthState::PHONE_ENTER;
+				State::authState = State::AuthState::PHONE_ENTER;
 			},
 			[this](td_api::authorizationStateWaitPremiumPurchase &) {
 				logger->named<Processor>(
@@ -150,21 +152,21 @@ void Processor::on_authorization_state_update() {
 			},
 			[this](td_api::authorizationStateWaitCode &) {
 				logger->named<Processor>("App auth code entering");
-				state::authState = state::AuthState::CODE_ENTER;
+				State::authState = State::AuthState::CODE_ENTER;
 			},
 			[this](td_api::authorizationStateWaitRegistration &) {
 			},
 			[this](td_api::authorizationStateWaitPassword &) {
 				logger->named<Processor>("Password entering");
-				state::authState = state::AuthState::PASSWORD_ENTER;
+				State::authState = State::AuthState::PASSWORD_ENTER;
 			},
-			[this](td_api::authorizationStateWaitOtherDeviceConfirmation &state) {
+			[this](td_api::authorizationStateWaitOtherDeviceConfirmation &State) {
 				logger->named<Processor>(
 						"This login link on another device confirmation" +
-						state.link_);
+						State.link_);
 			},
 			[this](td_api::authorizationStateWaitTdlibParameters &) {
-				state::authState = state::AuthState::TDLIB_PARAMS;
+				State::authState = State::AuthState::TDLIB_PARAMS;
 				logger->named<Processor>(
 						"AuthorizationStateWaitTdlibParameters entering");
 				auto request = td_api::make_object<td_api::setTdlibParameters>();
@@ -199,7 +201,7 @@ std::function<void(Object)> Processor::create_authentication_query_handler(strin
     logger->named<Processor>("authentication_query_handler\n");
     if (id == authentication_query_id_) {
       (*error) = check_authentication_error(std::move(object));
-			state::changeState = state::ChangingAuthState::ERROR;
+			State::changeState = State::ChangingAuthState::ERROR;
     }
 	};
 }

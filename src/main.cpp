@@ -7,7 +7,7 @@
 #include <fstream>
 
 #include <renderer.h>
-#include <telegram.cpp>
+#include <telegram/facade.h>
 
 using namespace ftxui;
 
@@ -30,11 +30,10 @@ int main() {
   Logger *logger = new Logger();
   // logger->info("dsaf");
   logger->setPrintFunc(printLog);
-  // logger->info("dsaf");
+  logger->info("dsaf");
   logger->system(Logger::SystemMessages::START);
 
-  TdManager &tdManager = TdManager::getInstance();
-  tdManager.setLogger(logger);
+  TgFacade &tg_facade = TgFacade::getInstance(logger);
 
   screen.Loop(getRenderer(screen, logger));
   logger->system(Logger::SystemMessages::STOP);

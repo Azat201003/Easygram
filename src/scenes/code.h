@@ -1,6 +1,5 @@
 #pragma once
 
-#include <telegram.cpp>
 #include <scenes/scene.h>
 
 #include <memory>

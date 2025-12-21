@@ -33,13 +33,14 @@ add_executable(main
 	src/scenes/code.cpp
 	src/scenes/password.cpp
 	src/scenes/main.cpp
+
 	src/telegram/processor.cpp
 	src/telegram/sender.cpp
 	src/telegram/handlers.cpp
 	src/telegram/facade.cpp
+
 	src/main.cpp
 	src/renderer.cpp
-	src/telegram.cpp
 )
 
 target_include_directories(main PRIVATE src)

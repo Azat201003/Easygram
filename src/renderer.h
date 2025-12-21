@@ -11,7 +11,6 @@
 #include <thread>
 #include <vector>
 
-#include <telegram.cpp>
 #include <scenes/code.h>
 #include <scenes/load.h>
 #include <scenes/main.h>

@@ -9,15 +9,15 @@
 
 namespace td_api = td::td_api;
 
-class Sender {
+class TgSender {
 private:
   using Object = td_api::object_ptr<td_api::Object>;
 	std::int32_t client_id_{0};
 	std::uint64_t current_query_id_{0};
 	std::uint64_t next_query_id();
-	std::unique_ptr<td::ClientManager> client_manager_;
+	td::ClientManager* client_manager_;
 public:
-	Sender(Logger*, HandlerManager*, std::unique_ptr<td::ClientManager>);
+	TgSender(Logger*, HandlerManager*);
 	HandlerManager* handler_manager;
 	Logger* logger;
   void send_query(td_api::object_ptr<td_api::Function> f,

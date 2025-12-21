@@ -1,4 +1,5 @@
 #include <scenes/code.h>
+#include <telegram/facade.h>
 
 CodeScene::CodeScene(std::shared_ptr<int> page, ScreenInteractive &screen,
                      Logger *logger)
@@ -6,8 +7,8 @@ CodeScene::CodeScene(std::shared_ptr<int> page, ScreenInteractive &screen,
   components = std::make_shared<Components>();
   components->input_field = Input(&code, "Enter your code");
   components->quit_button = Button("Quit", screen.ExitLoopClosure());
-  components->continue_button = Button(
-      "Continue", [this] { TdManager::getInstance().setCode(code, &error); });
+   components->continue_button = Button(
+       "Continue", [this, logger] { TgFacade::getInstance(logger).set_code(code, &error); });
 }
 
 Component CodeScene::getComponent() {

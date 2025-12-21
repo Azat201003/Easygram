@@ -8,11 +8,12 @@ class TgFacade {
 private:
 	enum ChangingState { ENTERING, LOADING, ERROR };
 	ChangingState changeState;
+	std::unique_ptr<td::ClientManager> client_manager_;
 public:
 	TgFacade(Logger* logger);
 	static TgFacade& getInstance(Logger* logger);
 	Processor* processor;
-	Sender* sender;
+	TgSender* sender;
 	Logger* logger;
 	void set_code(std::string code, std::string* error);
 	void set_phone(std::string phone, std::string* error);

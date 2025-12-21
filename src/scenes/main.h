@@ -1,6 +1,6 @@
 #pragma once
 
-#include <telegram.cpp>
+#include <telegram/facade.h>
 #include <scenes/scene.h>
 
 #include <algorithm>
@@ -30,10 +30,10 @@ private:
   int selected_folder = 0;
   int chatMenuStart = 0;
 
-   bool isArchived(const td_api::chat &chat);
-   int64_t getMainOrder(const td_api::chat* chat);
-   void updateChatList();
-   MenuOption createAutoscrolled();
+	bool isArchived(const td_api::chat &chat);
+	int64_t getMainOrder(const td_api::chat* chat);
+	void updateChatList();
+	MenuOption createAutoscrolled();
 
 public:
   MainScene(std::shared_ptr<int> page, ScreenInteractive &screen,
