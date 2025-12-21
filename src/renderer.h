@@ -17,7 +17,8 @@
 #include <scenes/password.h>
 #include <scenes/phone.h>
 #include <scenes/scene.h>
+#include <scenes/manager.h>
 
 using namespace ftxui;
 
-Component getRenderer(ScreenInteractive &screen, Logger *logger);
+Component getRenderer(ScreenInteractive &screen, SceneManager* scene_manager);

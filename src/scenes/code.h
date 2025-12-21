@@ -17,8 +17,7 @@ private:
   std::string error;
 
 public:
-  CodeScene(std::shared_ptr<int> page, ScreenInteractive &screen,
-            Logger *logger);
+  CodeScene(std::shared_ptr<int> page, ScreenInteractive &screen);
   Component getComponent() override;
   Element getElement() override;
 };

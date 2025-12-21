@@ -1,9 +1,8 @@
 #include <telegram/processor.h>
 #include <state.h>
 #include <config.h>
+#include <utils/chats.h>
 #include <thread>
-
-std::map<std::int64_t, td_api::object_ptr<td_api::chat>> chats;
 
 namespace detail {
 template <class... Fs> struct overload;
@@ -23,17 +22,27 @@ template <class... F> auto overloaded(F... f) {
   return detail::overload<F...>(f...);
 }
 
-Processor::Processor(Logger* logger_, HandlerManager* handler_manager_, TgSender* sender_) {
-	this->logger = logger_;
+Processor::Processor(HandlerManager* handler_manager_, TgSender* sender_) {
+	this->logger = &UniqueLogger::getInstance();
 	this->handler_manager = handler_manager_;
 	this->sender = sender_;
+	this->chats_manager = nullptr;
 	this->client_manager_ = td::ClientManager::get_manager_singleton();
+}
+
+void Processor::set_chats_manager(ChatsManager* chats_manager) {
+	this->chats_manager = chats_manager;
 }
 
 void Processor::process_response(td::ClientManager::Response response) {
 	if (!response.object) {
 		logger->named<Processor>("No response");
 		return;
+	}
+	if (response.request_id) {
+		handler_manager->process(response.request_id, std::move(response.object));
+	} else {
+		// process_update(std::move(response.object));
 	}
 	logger->named<Processor>(response.request_id + " " + 
 													 to_string(response.object));
@@ -44,59 +53,59 @@ void Processor::process_response(td::ClientManager::Response response) {
 }
 
 void Processor::process_update(Object update) {
+	if (!update) return;
+	logger->debug("Processing update");
 	td_api::downcast_call(
 		*update,
 		overloaded(
 			[this](td_api::updateAuthorizationState &update_authorization_state) {
-				authorization_state_ =
-					std::move(update_authorization_state.authorization_state_);
-				on_authorization_state_update();
+				if (update_authorization_state.authorization_state_) {
+					authorization_state_ =
+						std::move(update_authorization_state.authorization_state_);
+					on_authorization_state_update();
+				}
 			},
 			[this](td_api::updateNewChat &update_new_chat) {
-				::chats[update_new_chat.chat_->id_] =
-					std::move(update_new_chat.chat_);
+				if (update_new_chat.chat_ && chats_manager) {
+					chats_manager->addOrUpdateChat(update_new_chat.chat_->id_,
+						std::move(update_new_chat.chat_));
+				}
 				logger->debug("Update new chat handled");
 			},
 			[this](td_api::updateChatPosition &update_chat_position) {
-				auto chat_it = ::chats.find(update_chat_position.chat_id_);
-				if (chat_it != ::chats.end()) {
-					auto chat = chat_it->second.get();
-					if (chat) {
-						bool found = false;
-						for (auto &pos : chat->positions_) {
-							if (pos && pos->list_->get_id() == update_chat_position.position_->list_->get_id()) {
-								pos = std::move(update_chat_position.position_);
-								found = true;
-								break;
-							}
-						}
-						if (!found) {
-							chat->positions_.push_back(std::move(update_chat_position.position_));
-						}
-					}
+				if (update_chat_position.position_ && chats_manager) {
+					chats_manager->updateChatPosition(update_chat_position.chat_id_, std::move(update_chat_position.position_));
 				}
 				logger->debug("Update chat position handled");
 			},
 			[this](td_api::updateChatTitle &update_chat_title) {
-				::chats[update_chat_title.chat_id_]->title_ =
-						update_chat_title.title_;
+				if (chats_manager) {
+					chats_manager->updateChatTitle(update_chat_title.chat_id_,
+							update_chat_title.title_);
+				}
 			},
 			[this](td_api::updateUser &update_user) {
-				auto user_id = update_user.user_->id_;
+				if (update_user.user_) {
+					auto user_id = update_user.user_->id_;
+				}
 			},
 			[this](td_api::updateNewMessage &update_new_message) {
-				auto chat_id = update_new_message.message_->chat_id_;
-				std::string sender_name;
-				std::string text;
-				if (update_new_message.message_->content_->get_id() ==
-							td_api::messageText::ID) {
-						text = static_cast<td_api::messageText &>(
-											 *update_new_message.message_->content_)
-											 .text_->text_;
+				if (update_new_message.message_ && update_new_message.message_->content_) {
+					auto chat_id = update_new_message.message_->chat_id_;
+					std::string sender_name;
+					std::string text;
+					if (update_new_message.message_->content_->get_id() ==
+								td_api::messageText::ID) {
+							auto& msg_text = static_cast<td_api::messageText &>(
+												 *update_new_message.message_->content_);
+							if (msg_text.text_) {
+								text = msg_text.text_->text_;
+							}
+					}
+					logger->named<Processor>(
+							"Receive message: [chat_id:" + to_string(chat_id) +
+							"] [from:" + sender_name + "] [" + text + "]");
 				}
-				logger->named<Processor>(
-						"Receive message: [chat_id:" + to_string(chat_id) +
-						"] [from:" + sender_name + "] [" + text + "]");
 			},
 			[](auto &update) {}
 		)
@@ -180,7 +189,7 @@ void Processor::on_authorization_state_update() {
 				request->application_version_ = "1.0";
 				string error;
 				sender->send_query(std::move(request),
-						create_authentication_query_handler(&error));
+						create_authentication_query_handler(&error, State::AuthState::PHONE_ENTER));
 			}
 		)
 	);
@@ -196,14 +205,17 @@ std::string Processor::check_authentication_error(Object object) {
 	return "";
 }
 
-std::function<void(Object)> Processor::create_authentication_query_handler(string *error) {
-  return [this, id = authentication_query_id_, error](Object object) {
+std::function<void(Object)> Processor::create_authentication_query_handler(string *error, int next_state) {
+  return [this, id = authentication_query_id_, error, next_state](Object object) {
     logger->named<Processor>("authentication_query_handler\n");
     if (id == authentication_query_id_) {
       (*error) = check_authentication_error(std::move(object));
 			State::changeState = State::ChangingAuthState::ERROR;
+			if ((*error).empty()) {
+				State::authState = (State::AuthState)next_state;
+			}
     }
-	};
+  };
 }
 
 void Processor::update_response() {

@@ -1,53 +1,40 @@
 #include <renderer.h>
 #include <telegram/facade.h>
 #include <state.h>
+#include <scenes/manager.h>
+#include <ftxui/dom/elements.hpp>
 
-Component getRenderer(ScreenInteractive &screen, Logger *logger) {
-  auto page = std::make_shared<int>(1);
-  std::vector<std::shared_ptr<Scene>> scenes;
-
-  scenes.push_back(std::make_shared<LoadingScene>(page, screen, logger));
-  scenes.push_back(std::make_shared<PhoneScene>(page, screen, logger));
-  scenes.push_back(std::make_shared<CodeScene>(page, screen, logger));
-  scenes.push_back(std::make_shared<PasswordScene>(page, screen, logger));
-  scenes.push_back(std::make_shared<MainScene>(page, screen, logger));
-
-  std::vector<Component> components;
-  for (auto &scene : scenes) {
-    components.push_back(scene->getComponent());
-  }
-  auto container = Container::Tab(components, page.get());
+Component getRenderer(ScreenInteractive &screen, SceneManager* scene_manager) {
+  auto container = Container::Tab(
+		scene_manager->get_components(),
+		scene_manager->get_page().get()
+	);
 
   static std::atomic<bool> running(true);
-  static std::thread worker([scenes, page, logger] {
+  auto& scenes = scene_manager->get_scenes();
+  static std::thread worker([scene_manager] {
     while (running) {
-      if (State::changeState != State::ChangingAuthState::LOADING &&
-          State::authState != State::AuthState::AUTHENTICATED) {
-        (*page) = State::authState;
-      } else if (State::changeState == State::ChangingAuthState::LOADING) {
-        (*page) = 0;
-      } else {
-        (*page) = 4;
-      }
-       scenes[*page]->ping();
-       std::this_thread::sleep_for(100ms);
+      scene_manager->update();
+			std::this_thread::sleep_for(100ms);
     }
   });
-  static std::thread updater([logger] () {
+  static std::thread updater([] () {
     while (running) {
-      TgFacade &tg_facade = TgFacade::getInstance(logger);
+      TgFacade &tg_facade = TgFacade::getInstance();
       tg_facade.update_response();
       std::this_thread::sleep_for(5ms);
     }
   });
 
+
+	std::shared_ptr<int> page = scene_manager->get_page();
   return CatchEvent(Renderer(container, [scenes, page] {
-    return scenes.at(*page)->getElement() | border | center;
-  }), [&](Event event) {
-        if (event == Event::Character('q')) {
-            screen.Exit();
-            return true;
-        }
-        return false;
-    });
+			return scenes.at(*page)->getElement() | border | center;
+		}), [&](Event event) {
+			if (event == Event::Character('q')) {
+				screen.Exit();
+				return true;
+			}
+			return false;
+	});
 }

@@ -8,8 +8,7 @@ private:
   const char chars[26] = "A!$XLW)!*#:D&!)!)XPZ:pqix";
 
 public:
-  LoadingScene(std::shared_ptr<int> page, ScreenInteractive &screen,
-               Logger *logger);
+  LoadingScene(std::shared_ptr<int> page, ScreenInteractive &screen);
   Component getComponent() override;
   Element getElement() override;
 };

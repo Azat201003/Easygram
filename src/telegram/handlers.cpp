@@ -1,7 +1,7 @@
 #include "handlers.h"
 
-HandlerManager::HandlerManager(Logger* logger_) {
-	this->logger = logger_;
+HandlerManager::HandlerManager() {
+	this->logger = &UniqueLogger::getInstance();
 }
 
 void HandlerManager::add_handler(std::uint64_t id, std::function<void(Object)> handler) {
