@@ -1,25 +1,24 @@
-#include "PhoneScene.h"
+#include <scenes/code.h>
+#include <telegram/facade.h>
 
-PhoneScene::PhoneScene(std::shared_ptr<int> page, ScreenInteractive &screen,
-                       Logger *logger)
-    : Scene(page, screen, logger) {
+CodeScene::CodeScene(std::shared_ptr<int> page, ScreenInteractive &screen)
+    : Scene(page, screen) {
   components = std::make_shared<Components>();
-  components->input_field = Input(&phone, "Enter your phone");
+  components->input_field = Input(&code, "Enter your code");
   components->quit_button = Button("Quit", screen.ExitLoopClosure());
-  components->continue_button = Button("Continue", [this] {
-    TdManager::getInstance().setPhoneNumber(phone, &error);
-  });
+   components->continue_button = Button(
+       "Continue", [this] { TgFacade::getInstance().set_code(code, &error); });
 }
 
-Component PhoneScene::getComponent() {
+Component CodeScene::getComponent() {
   return Container::Vertical({components->input_field,
                               components->continue_button,
                               components->quit_button});
 }
 
-Element PhoneScene::getElement() {
+Element CodeScene::getElement() {
   return vbox({
-      hbox(text(" Login telegram with phone: ") | bold,
+      hbox(text("Enter your verification code: ") | bold,
            components->input_field->Render()) |
           border | size(WIDTH, EQUAL, 50),
       filler(),

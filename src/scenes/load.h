@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Scene.h"
+#include <scenes/scene.h>
 
 class LoadingScene : public Scene {
 private:
@@ -8,8 +8,7 @@ private:
   const char chars[26] = "A!$XLW)!*#:D&!)!)XPZ:pqix";
 
 public:
-  LoadingScene(std::shared_ptr<int> page, ScreenInteractive &screen,
-               Logger *logger);
+  LoadingScene(std::shared_ptr<int> page, ScreenInteractive &screen);
   Component getComponent() override;
   Element getElement() override;
 };

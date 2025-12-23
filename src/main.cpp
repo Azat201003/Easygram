@@ -6,38 +6,22 @@
 
 #include <fstream>
 
-#include "scenes/Renderer.h"
-#include "telegram.cpp"
+#include <renderer.h>
+#include <telegram/facade.h>
 
 using namespace ftxui;
-
-ofstream log_file;
-
-void printLog(string text) { log_file << text; }
 
 int main() {
   auto screen = ScreenInteractive::Fullscreen();
 
-  // cout << "hello world";
-  log_file.open("log", std::ios_base::trunc);
-  log_file.close();
-  log_file.open("log", std::ios_base::app);
-  if (!log_file.is_open()) {
-    Logger().system(Logger::SystemMessages::STOP);
-    return 0;
-  }
-
-  Logger *logger = new Logger();
-  // logger->info("dsaf");
-  logger->setPrintFunc(printLog);
-  // logger->info("dsaf");
+  Logger *logger = &UniqueLogger::getInstance();
+  logger->setOutputFileAsPrint("log");
   logger->system(Logger::SystemMessages::START);
 
-  TdManager &tdManager = TdManager::getInstance();
-  tdManager.setLogger(logger);
+	ChatManager* chat_manager = new ChatManager();
+  TgFacade &tg_facade = TgFacade::getInstance();
+	tg_facade.set_chat_manager(chat_manager);
 
-  screen.Loop(getRenderer(screen, logger));
+  screen.Loop(getRenderer(screen, chat_manager));
   logger->system(Logger::SystemMessages::STOP);
-  log_file.close();
-  return 0;
 }

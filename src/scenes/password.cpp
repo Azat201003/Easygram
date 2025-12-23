@@ -1,24 +1,24 @@
-#include "CodeScene.h"
+#include <scenes/password.h>
 
-CodeScene::CodeScene(std::shared_ptr<int> page, ScreenInteractive &screen,
-                     Logger *logger)
-    : Scene(page, screen, logger) {
+PasswordScene::PasswordScene(std::shared_ptr<int> page, ScreenInteractive &screen)
+    : Scene(page, screen) {
   components = std::make_shared<Components>();
-  components->input_field = Input(&code, "Enter your code");
+  components->input_field = Input(&password, "Enter your password");
   components->quit_button = Button("Quit", screen.ExitLoopClosure());
-  components->continue_button = Button(
-      "Continue", [this] { TdManager::getInstance().setCode(code, &error); });
+  components->continue_button = Button("Continue", [this] {
+    TgFacade::getInstance().set_password(password, &error);
+  });
 }
 
-Component CodeScene::getComponent() {
+Component PasswordScene::getComponent() {
   return Container::Vertical({components->input_field,
                               components->continue_button,
                               components->quit_button});
 }
 
-Element CodeScene::getElement() {
+Element PasswordScene::getElement() {
   return vbox({
-      hbox(text("Enter your verification code: ") | bold,
+      hbox(text(" Login password: ") | bold,
            components->input_field->Render()) |
           border | size(WIDTH, EQUAL, 50),
       filler(),

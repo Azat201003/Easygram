@@ -1,14 +1,17 @@
-#include "Renderer.h"
+#include <renderer.h>
+#include <state.h>
+#include <telegram/facade.h>
+#include <utils/chats.h>
 
-Component getRenderer(ScreenInteractive &screen, Logger *logger) {
+Component getRenderer(ScreenInteractive &screen, ChatManager* chat_manager) {
   auto page = std::make_shared<int>(1);
   std::vector<std::shared_ptr<Scene>> scenes;
 
-  scenes.push_back(std::make_shared<LoadingScene>(page, screen, logger));
-  scenes.push_back(std::make_shared<PhoneScene>(page, screen, logger));
-  scenes.push_back(std::make_shared<CodeScene>(page, screen, logger));
-  scenes.push_back(std::make_shared<PasswordScene>(page, screen, logger));
-  scenes.push_back(std::make_shared<MainScene>(page, screen, logger));
+  scenes.push_back(std::make_shared<LoadingScene>(page, screen));
+  scenes.push_back(std::make_shared<PhoneScene>(page, screen));
+  scenes.push_back(std::make_shared<CodeScene>(page, screen));
+  scenes.push_back(std::make_shared<PasswordScene>(page, screen));
+  scenes.push_back(std::make_shared<MainScene>(page, screen, chat_manager));
 
   std::vector<Component> components;
   for (auto &scene : scenes) {
@@ -19,11 +22,10 @@ Component getRenderer(ScreenInteractive &screen, Logger *logger) {
   static std::atomic<bool> running(true);
   static std::thread worker([scenes, page] {
     while (running) {
-      TdManager &tdManager = TdManager::getInstance();
-      if (tdManager.changeState != TdManager::ChangingState::LOADING &&
-          tdManager.authState != TdManager::AuthState::AUTHENTICATED) {
-        (*page) = tdManager.authState;
-      } else if (tdManager.changeState == TdManager::ChangingState::LOADING) {
+      if (State::changeState != State::ChangingAuthState::LOADING &&
+          State::authState != State::AuthState::AUTHENTICATED) {
+        (*page) = State::authState;
+      } else if (State::changeState == State::ChangingAuthState::LOADING) {
         (*page) = 0;
       } else {
         (*page) = 4;
@@ -34,8 +36,9 @@ Component getRenderer(ScreenInteractive &screen, Logger *logger) {
   });
   static std::thread updater([] () {
     while (running) {
-      TdManager &tdManager = TdManager::getInstance(); 
-       tdManager.update_response();
+      TgFacade &tg_facade = TgFacade::getInstance();
+      tg_facade.update_response();
+      std::this_thread::sleep_for(1ms);
     }
   });
 

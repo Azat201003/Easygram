@@ -17,12 +17,13 @@ protected:
   ScreenInteractive &screen;
 
 public:
-  Scene(std::shared_ptr<int> page, ScreenInteractive &screen, Logger *logger)
-      : page(page), screen(screen), logger(logger) {}
+  Scene(std::shared_ptr<int> page, ScreenInteractive &screen)
+      : page(page), screen(screen) { this->logger = &UniqueLogger::getInstance(); }
   virtual ~Scene() = default;
   virtual Component getComponent() = 0;
   virtual Element getElement() = 0;
   void ping() {
+		logger->named<Scene>("Ping");
     screen.PostEvent(Event::Special("Ping"));
   }
 };

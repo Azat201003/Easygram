@@ -1,10 +1,9 @@
-#include "LoadingScene.h"
+#include <scenes/load.h>
 
 #include <string>
 
-LoadingScene::LoadingScene(std::shared_ptr<int> page, ScreenInteractive &screen,
-                           Logger *logger)
-    : Scene(page, screen, logger) {}
+LoadingScene::LoadingScene(std::shared_ptr<int> page, ScreenInteractive &screen)
+    : Scene(page, screen) {}
 
 Component LoadingScene::getComponent() { return Container::Vertical({}); }
 

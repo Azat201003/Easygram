@@ -11,14 +11,13 @@
 #include <thread>
 #include <vector>
 
-#include "../telegram.cpp"
-#include "CodeScene.h"
-#include "LoadingScene.h"
-#include "MainScene.h"
-#include "PasswordScene.h"
-#include "PhoneScene.h"
-#include "Scene.h"
+#include <scenes/code.h>
+#include <scenes/load.h>
+#include <scenes/main.h>
+#include <scenes/password.h>
+#include <scenes/phone.h>
+#include <scenes/scene.h>
 
 using namespace ftxui;
 
-Component getRenderer(ScreenInteractive &screen, Logger *logger);
+Component getRenderer(ScreenInteractive &screen, ChatManager* chat_manager);
