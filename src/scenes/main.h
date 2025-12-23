@@ -2,7 +2,6 @@
 
 #include <telegram/facade.h>
 #include <scenes/scene.h>
-#include <utils/chats.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -35,9 +34,10 @@ private:
 	int64_t getMainOrder(const td_api::chat* chat);
 	void updateChatList();
 	MenuOption createAutoscrolled();
-	ChatsManager* chats_manager;
+
 public:
-  MainScene(std::shared_ptr<int> page, ScreenInteractive &screen, ChatsManager* chats_manager_);
+  MainScene(std::shared_ptr<int> page, ScreenInteractive &screen,
+            Logger *logger);
   Component getComponent() override;
   Element getElement() override;
 };

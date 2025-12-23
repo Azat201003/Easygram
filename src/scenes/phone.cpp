@@ -1,13 +1,14 @@
 #include <scenes/phone.h>
 
-PhoneScene::PhoneScene(std::shared_ptr<int> page, ScreenInteractive &screen)
-    : Scene(page, screen) {
+PhoneScene::PhoneScene(std::shared_ptr<int> page, ScreenInteractive &screen,
+                       Logger *logger)
+    : Scene(page, screen, logger) {
   components = std::make_shared<Components>();
   components->input_field = Input(&phone, "Enter your phone");
   components->quit_button = Button("Quit", screen.ExitLoopClosure());
-	components->continue_button = Button("Continue", [this] {
-		TgFacade::getInstance().set_phone(phone, &error);
-	});
+   components->continue_button = Button("Continue", [this, logger] {
+     TgFacade::getInstance(logger).set_phone(phone, &error);
+   });
 }
 
 Component PhoneScene::getComponent() {

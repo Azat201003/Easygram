@@ -2,8 +2,9 @@
 
 #include <string>
 
-LoadingScene::LoadingScene(std::shared_ptr<int> page, ScreenInteractive &screen)
-    : Scene(page, screen) { }
+LoadingScene::LoadingScene(std::shared_ptr<int> page, ScreenInteractive &screen,
+                           Logger *logger)
+    : Scene(page, screen, logger) {}
 
 Component LoadingScene::getComponent() { return Container::Vertical({}); }
 

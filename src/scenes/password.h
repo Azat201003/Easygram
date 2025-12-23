@@ -18,7 +18,8 @@ private:
   std::string error;
 
 public:
-  PasswordScene(std::shared_ptr<int> page, ScreenInteractive &screen);
+  PasswordScene(std::shared_ptr<int> page, ScreenInteractive &screen,
+                Logger *logger);
   Component getComponent() override;
   Element getElement() override;
 };

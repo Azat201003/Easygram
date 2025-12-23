@@ -1,31 +1,26 @@
 #include <telegram/facade.h>
 
-TgFacade::TgFacade() {
+TgFacade::TgFacade(Logger* logger) {
 	td::ClientManager::execute(
 			td_api::make_object<td_api::setLogVerbosityLevel>(0));
-	
-	HandlerManager* handler_manager = new HandlerManager();
-	
-	this->sender		= new TgSender(handler_manager);
-	this->processor	= new Processor(handler_manager, sender);
-	this->sender->send_query(td_api::make_object<td_api::getOption>("version"), {});
-	
-
+	HandlerManager* handler_manager = new HandlerManager(logger);
+	sender		= new TgSender(logger, handler_manager);
+	processor	= new Processor(logger, handler_manager, sender);
 	changeState = ChangingState::ENTERING;
-
-	this->logger = &UniqueLogger::getInstance();
+	sender->send_query(td_api::make_object<td_api::getOption>("version"), {});
 }
 
-TgFacade& TgFacade::getInstance() {
-	static TgFacade instance;
+TgFacade& TgFacade::getInstance(Logger* logger) {
+	static TgFacade instance(logger);
 	return instance;
 }
+
 
 void TgFacade::set_code(std::string code, std::string* error) {
 	changeState = ChangingState::LOADING;
 	sender->send_query(
 		td_api::make_object<td_api::checkAuthenticationCode>(code),
-		processor->create_authentication_query_handler(error, State::AuthState::AUTHENTICATED)
+		processor->create_authentication_query_handler(error)
 	);
 }
 
@@ -33,7 +28,7 @@ void TgFacade::set_phone(std::string phone, std::string* error) {
 	changeState = ChangingState::LOADING;
 	sender->send_query(
 		td_api::make_object<td_api::setAuthenticationPhoneNumber>(phone, nullptr),
-		processor->create_authentication_query_handler(error, State::AuthState::CODE_ENTER)
+		processor->create_authentication_query_handler(error)
 	);
 }
 
@@ -41,15 +36,11 @@ void TgFacade::set_password(std::string password, std::string* error) {
 	changeState = ChangingState::LOADING;
 	sender->send_query(
 		td_api::make_object<td_api::checkAuthenticationPassword>(password),
-		processor->create_authentication_query_handler(error, State::AuthState::AUTHENTICATED)
+		processor->create_authentication_query_handler(error)
 	);
 }
 
 void TgFacade::update_response() {
 	processor->update_response();
-}
-
-void TgFacade::set_chats_manager(ChatsManager* chats_manager) {
-	processor->set_chats_manager(chats_manager);
 }
 

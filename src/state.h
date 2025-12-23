@@ -3,7 +3,6 @@
 #include <map>
 #include <vector>
 #include <td/telegram/td_api.h>
-#include <utils/chats.h>
 
 namespace td_api = td::td_api;
 
@@ -27,3 +26,5 @@ static inline AuthState authState = AuthState::TDLIB_PARAMS;
 static inline ChangingAuthState changeState = ChangingAuthState::ENTERING;
 static inline bool needRestart = false;
 };
+
+extern std::map<std::int64_t, td_api::object_ptr<td_api::chat>> chats;

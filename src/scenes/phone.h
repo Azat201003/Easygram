@@ -18,7 +18,8 @@ private:
   std::string error;
 
 public:
-  PhoneScene(std::shared_ptr<int> page, ScreenInteractive &screen);
+  PhoneScene(std::shared_ptr<int> page, ScreenInteractive &screen,
+             Logger *logger);
   Component getComponent() override;
   Element getElement() override;
 };
