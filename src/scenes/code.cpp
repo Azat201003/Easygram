@@ -1,9 +1,8 @@
 #include <scenes/code.h>
 #include <telegram/facade.h>
 
-CodeScene::CodeScene(std::shared_ptr<int> page, ScreenInteractive &screen,
-                     Logger *logger)
-    : Scene(page, screen, logger) {
+CodeScene::CodeScene(std::shared_ptr<int> page, ScreenInteractive &screen)
+    : Scene(page, screen) {
   components = std::make_shared<Components>();
   components->input_field = Input(&code, "Enter your code");
   components->quit_button = Button("Quit", screen.ExitLoopClosure());

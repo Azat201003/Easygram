@@ -1,8 +1,7 @@
 #include <scenes/phone.h>
 
-PhoneScene::PhoneScene(std::shared_ptr<int> page, ScreenInteractive &screen,
-                       Logger *logger)
-    : Scene(page, screen, logger) {
+PhoneScene::PhoneScene(std::shared_ptr<int> page, ScreenInteractive &screen)
+    : Scene(page, screen) {
   components = std::make_shared<Components>();
   components->input_field = Input(&phone, "Enter your phone");
   components->quit_button = Button("Quit", screen.ExitLoopClosure());

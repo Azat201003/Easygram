@@ -1,8 +1,7 @@
 #include <scenes/password.h>
 
-PasswordScene::PasswordScene(std::shared_ptr<int> page,
-                             ScreenInteractive &screen, Logger *logger)
-    : Scene(page, screen, logger) {
+PasswordScene::PasswordScene(std::shared_ptr<int> page, ScreenInteractive &screen)
+    : Scene(page, screen) {
   components = std::make_shared<Components>();
   components->input_field = Input(&password, "Enter your password");
   components->quit_button = Button("Quit", screen.ExitLoopClosure());

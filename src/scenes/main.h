@@ -36,8 +36,7 @@ private:
 	MenuOption createAutoscrolled();
 
 public:
-  MainScene(std::shared_ptr<int> page, ScreenInteractive &screen,
-            Logger *logger);
+  MainScene(std::shared_ptr<int> page, ScreenInteractive &screen);
   Component getComponent() override;
   Element getElement() override;
 };

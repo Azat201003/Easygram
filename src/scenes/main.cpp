@@ -104,9 +104,8 @@ MenuOption MainScene::createAutoscrolled() {
   return *option;
 }
 
-MainScene::MainScene(std::shared_ptr<int> page, ScreenInteractive &screen,
-                     Logger *logger)
-    : Scene(page, screen, logger) {
+MainScene::MainScene(std::shared_ptr<int> page, ScreenInteractive &screen)
+    : Scene(page, screen) {
   components = std::make_shared<Components>();
   components->quit_button = Button("Quit", screen.ExitLoopClosure());
   updateChatList();

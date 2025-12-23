@@ -20,6 +20,6 @@ int main() {
 
   TgFacade &tg_facade = TgFacade::getInstance();
 
-  screen.Loop(getRenderer(screen, logger));
+  screen.Loop(getRenderer(screen));
   logger->system(Logger::SystemMessages::STOP);
 }

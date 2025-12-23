@@ -2,15 +2,15 @@
 #include <telegram/facade.h>
 #include <state.h>
 
-Component getRenderer(ScreenInteractive &screen, Logger *logger) {
+Component getRenderer(ScreenInteractive &screen) {
   auto page = std::make_shared<int>(1);
   std::vector<std::shared_ptr<Scene>> scenes;
 
-  scenes.push_back(std::make_shared<LoadingScene>(page, screen, logger));
-  scenes.push_back(std::make_shared<PhoneScene>(page, screen, logger));
-  scenes.push_back(std::make_shared<CodeScene>(page, screen, logger));
-  scenes.push_back(std::make_shared<PasswordScene>(page, screen, logger));
-  scenes.push_back(std::make_shared<MainScene>(page, screen, logger));
+  scenes.push_back(std::make_shared<LoadingScene>(page, screen));
+  scenes.push_back(std::make_shared<PhoneScene>(page, screen));
+  scenes.push_back(std::make_shared<CodeScene>(page, screen));
+  scenes.push_back(std::make_shared<PasswordScene>(page, screen));
+  scenes.push_back(std::make_shared<MainScene>(page, screen));
 
   std::vector<Component> components;
   for (auto &scene : scenes) {
@@ -19,7 +19,7 @@ Component getRenderer(ScreenInteractive &screen, Logger *logger) {
   auto container = Container::Tab(components, page.get());
 
   static std::atomic<bool> running(true);
-  static std::thread worker([scenes, page, logger] {
+  static std::thread worker([scenes, page] {
     while (running) {
       if (State::changeState != State::ChangingAuthState::LOADING &&
           State::authState != State::AuthState::AUTHENTICATED) {
@@ -33,7 +33,7 @@ Component getRenderer(ScreenInteractive &screen, Logger *logger) {
        std::this_thread::sleep_for(100ms);
     }
   });
-  static std::thread updater([logger] () {
+  static std::thread updater([] () {
     while (running) {
       TgFacade &tg_facade = TgFacade::getInstance();
       tg_facade.update_response();

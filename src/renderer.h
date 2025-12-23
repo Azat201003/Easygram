@@ -20,4 +20,4 @@
 
 using namespace ftxui;
 
-Component getRenderer(ScreenInteractive &screen, Logger *logger);
+Component getRenderer(ScreenInteractive &screen);
