@@ -4,6 +4,7 @@
 #include <td/telegram/td_api.hpp>
 #include <logger/logger.h>
 #include <telegram/sender.h>
+#include <utils/chats.h>
 
 #include <map>
 #include <functional>
@@ -23,6 +24,7 @@ private:
 	Logger* logger;
 	TgSender* sender;
 	HandlerManager* handler_manager;
+	ChatManager* chat_manager;
 public:
 	std::function<void(Object)> create_authentication_query_handler(string *error);
 	Processor(HandlerManager*, TgSender*);
@@ -31,4 +33,5 @@ public:
 	void process_response(td::ClientManager::Response response);
 	void process_update(Object update);
 	void update_response();
+	void set_chat_manager(ChatManager* chat_manager);
 };

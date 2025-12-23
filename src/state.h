@@ -27,4 +27,3 @@ static inline ChangingAuthState changeState = ChangingAuthState::ENTERING;
 static inline bool needRestart = false;
 };
 
-extern std::map<std::int64_t, td_api::object_ptr<td_api::chat>> chats;

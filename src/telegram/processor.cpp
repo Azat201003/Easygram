@@ -3,8 +3,6 @@
 #include <config.h>
 #include <thread>
 
-std::map<std::int64_t, td_api::object_ptr<td_api::chat>> chats;
-
 namespace detail {
 template <class... Fs> struct overload;
 
@@ -30,6 +28,10 @@ Processor::Processor(HandlerManager* handler_manager_, TgSender* sender_) {
 	this->client_manager_ = td::ClientManager::get_manager_singleton();
 }
 
+void Processor::set_chat_manager(ChatManager* chat_manager) {
+	this->chat_manager = chat_manager;
+}
+
 void Processor::process_response(td::ClientManager::Response response) {
 	if (!response.object) {
 		logger->named<Processor>("No response");
@@ -53,33 +55,23 @@ void Processor::process_update(Object update) {
 				on_authorization_state_update();
 			},
 			[this](td_api::updateNewChat &update_new_chat) {
-				::chats[update_new_chat.chat_->id_] =
-					std::move(update_new_chat.chat_);
 				logger->debug("Update new chat handled");
+				if (update_new_chat.chat_ == nullptr)
+					return;
+
+				chat_manager->getSortedChats(0);
+
+				logger->debug("Chat: \"" + update_new_chat.chat_->title_ + "\", " + std::to_string(update_new_chat.chat_->id_));
+				td_api::chat* chat = update_new_chat.chat_.release();
+				chat_manager->addOrUpdateChat(chat->id_, td_api::object_ptr(chat));
 			},
 			[this](td_api::updateChatPosition &update_chat_position) {
-				auto chat_it = ::chats.find(update_chat_position.chat_id_);
-				if (chat_it != ::chats.end()) {
-					auto chat = chat_it->second.get();
-					if (chat) {
-						bool found = false;
-						for (auto &pos : chat->positions_) {
-							if (pos && pos->list_->get_id() == update_chat_position.position_->list_->get_id()) {
-								pos = std::move(update_chat_position.position_);
-								found = true;
-								break;
-							}
-						}
-						if (!found) {
-							chat->positions_.push_back(std::move(update_chat_position.position_));
-						}
-					}
-				}
 				logger->debug("Update chat position handled");
+				chat_manager->updateChatPosition(update_chat_position.chat_id_, std::move(update_chat_position.position_));
 			},
 			[this](td_api::updateChatTitle &update_chat_title) {
-				::chats[update_chat_title.chat_id_]->title_ =
-						update_chat_title.title_;
+				logger->debug("Update chat title handled");
+				chat_manager->updateChatTitle(update_chat_title.chat_id_, update_chat_title.title_);
 			},
 			[this](td_api::updateUser &update_user) {
 				auto user_id = update_user.user_->id_;

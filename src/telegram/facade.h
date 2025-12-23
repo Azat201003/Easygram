@@ -3,6 +3,7 @@
 #include <telegram/sender.h>
 #include <telegram/processor.h>
 #include <logger/logger.h>
+#include <utils/chats.h>
 
 class TgFacade {
 private:
@@ -19,5 +20,6 @@ public:
 	void set_phone(std::string phone, std::string* error);
 	void set_password(std::string password, std::string* error);
 	void update_response();
+	void set_chat_manager(ChatManager* chat_manager);
 };
 

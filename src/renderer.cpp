@@ -1,8 +1,9 @@
 #include <renderer.h>
-#include <telegram/facade.h>
 #include <state.h>
+#include <telegram/facade.h>
+#include <utils/chats.h>
 
-Component getRenderer(ScreenInteractive &screen) {
+Component getRenderer(ScreenInteractive &screen, ChatManager* chat_manager) {
   auto page = std::make_shared<int>(1);
   std::vector<std::shared_ptr<Scene>> scenes;
 
@@ -10,7 +11,7 @@ Component getRenderer(ScreenInteractive &screen) {
   scenes.push_back(std::make_shared<PhoneScene>(page, screen));
   scenes.push_back(std::make_shared<CodeScene>(page, screen));
   scenes.push_back(std::make_shared<PasswordScene>(page, screen));
-  scenes.push_back(std::make_shared<MainScene>(page, screen));
+  scenes.push_back(std::make_shared<MainScene>(page, screen, chat_manager));
 
   std::vector<Component> components;
   for (auto &scene : scenes) {
@@ -37,7 +38,7 @@ Component getRenderer(ScreenInteractive &screen) {
     while (running) {
       TgFacade &tg_facade = TgFacade::getInstance();
       tg_facade.update_response();
-      std::this_thread::sleep_for(5ms);
+      std::this_thread::sleep_for(1ms);
     }
   });
 

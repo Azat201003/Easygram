@@ -26,6 +26,7 @@ public:
 	ChatManager();
 	void addOrUpdateChat(int64_t chat_id, TdChat chat);
 	void updateChatTitle(int64_t chat_id, const std::string& title);
+	void updateChatPosition(int64_t chat_id, td_api::object_ptr<td_api::chatPosition> position);
 	std::vector<Chat> getSortedChats(int32_t chat_list_id);
 };
 

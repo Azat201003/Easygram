@@ -11,6 +11,10 @@ TgFacade::TgFacade() {
 	sender->send_query(td_api::make_object<td_api::getOption>("version"), {});
 }
 
+void TgFacade::set_chat_manager(ChatManager* chat_manager) {
+	this->processor->set_chat_manager(chat_manager);
+}
+
 TgFacade& TgFacade::getInstance() {
 	static TgFacade instance;
 	return instance;

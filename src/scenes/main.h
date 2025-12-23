@@ -2,6 +2,7 @@
 
 #include <telegram/facade.h>
 #include <scenes/scene.h>
+#include <utils/chats.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -30,13 +31,12 @@ private:
   int selected_folder = 0;
   int chatMenuStart = 0;
 
-	bool isArchived(const td_api::chat &chat);
-	int64_t getMainOrder(const td_api::chat* chat);
 	void updateChatList();
-	MenuOption createAutoscrolled();
+	MenuOption create_autoscrolled();
 
+	ChatManager* chat_manager;	
 public:
-  MainScene(std::shared_ptr<int> page, ScreenInteractive &screen);
+  MainScene(std::shared_ptr<int> page, ScreenInteractive &screen, ChatManager* chat_manager);
   Component getComponent() override;
   Element getElement() override;
 };

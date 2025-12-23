@@ -8,7 +8,32 @@ ChatManager::ChatManager() {
 }
 
 void ChatManager::addOrUpdateChat(int64_t chat_id, TdChat chat) {
-	chats_[chat_id] = std::move(chat);
+	logger->debug("ChatManager::addOrUpdateChat");
+	if (chat)
+		chats_[chat_id] = std::move(chat);
+}
+
+void ChatManager::updateChatPosition(int64_t chat_id, td_api::object_ptr<td_api::chatPosition> position) {
+	auto it = chats_.find(chat_id);
+	if (it == chats_.end()) {
+		logger->debug("In ChatManager was interapted updateChatPosition, but chat_id in chats_ wasn't found");
+		return;
+	}
+	if(std::to_address(it) == nullptr) {
+		logger->debug("In ChatManager was interupted updateChatPosition, but chat is nullptr");
+		return;
+	}	
+	bool found = false;
+	for (auto &pos : it->second->positions_) {
+		if (pos && pos->list_->get_id() == position->list_->get_id()) {
+			pos = std::move(position);
+			found = true;
+			break;
+		}
+	}
+	if (!found) {
+		it->second->positions_.push_back(std::move(position));
+	}
 }
 
 void ChatManager::updateChatTitle(int64_t chat_id, const std::string& title) {
@@ -17,26 +42,34 @@ void ChatManager::updateChatTitle(int64_t chat_id, const std::string& title) {
 		logger->debug("In ChatManager was interapted updateChatTitle, but chat_id in chats_ wasn't found");
 		return;
 	}
+	if(std::to_address(it) == nullptr) {
+		logger->debug("In ChatManager was interupted updateChatTitle, but chat is nullptr");
+		return;
+	}	
 	it->second->title_ = title;
 }
 
 std::vector<Chat> ChatManager::getSortedChats(int32_t chat_list_id) {
 	std::vector<Chat> result;
 	for (const auto& [chat_id, chat] : chats_) {
+		if (!chat)
+			continue;
+		logger->debug("ChatManager::getSortedChats checking" + chat->title_);
 		for (const td_api::object_ptr<td_api::chatPosition>& position : chat->positions_) {
-			if (position->list_->get_id() == chat_list_id) {
+			if (position && position->list_ && position->list_->get_id() == chat_list_id) {
 				result.push_back(Chat{
 					id: chat_id,
 					order: position->order_,
-					title: chat->title_
+					title: (chat->title_ != ""?chat->title_:"Deleted")
 				});
 				break;
 			}
 		}
 	}
 	std::sort(result.begin(), result.end(), [] (const Chat& a, const Chat& b) {
-		return a.order < b.order || a.order == b.order && a.id < b.id;
+		return a.order > b.order || a.order == b.order && a.id < b.id;
 	});
+	logger->debug("ChatManager::getSortedChats");
 	return result;
 }
 
