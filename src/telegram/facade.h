@@ -9,12 +9,12 @@ private:
 	enum ChangingState { ENTERING, LOADING, ERROR };
 	ChangingState changeState;
 	std::unique_ptr<td::ClientManager> client_manager_;
-public:
-	TgFacade(Logger* logger);
-	static TgFacade& getInstance(Logger* logger);
+	Logger* logger;
 	Processor* processor;
 	TgSender* sender;
-	Logger* logger;
+public:
+	TgFacade();
+	static TgFacade& getInstance();
 	void set_code(std::string code, std::string* error);
 	void set_phone(std::string phone, std::string* error);
 	void set_password(std::string password, std::string* error);

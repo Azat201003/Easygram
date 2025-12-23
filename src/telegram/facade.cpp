@@ -1,17 +1,18 @@
 #include <telegram/facade.h>
 
-TgFacade::TgFacade(Logger* logger) {
+TgFacade::TgFacade() {
 	td::ClientManager::execute(
 			td_api::make_object<td_api::setLogVerbosityLevel>(0));
-	HandlerManager* handler_manager = new HandlerManager(logger);
-	sender		= new TgSender(logger, handler_manager);
-	processor	= new Processor(logger, handler_manager, sender);
+	this->logger = &UniqueLogger::getInstance();
+	HandlerManager* handler_manager = new HandlerManager();
+	sender		= new TgSender(handler_manager);
+	processor	= new Processor(handler_manager, sender);
 	changeState = ChangingState::ENTERING;
 	sender->send_query(td_api::make_object<td_api::getOption>("version"), {});
 }
 
-TgFacade& TgFacade::getInstance(Logger* logger) {
-	static TgFacade instance(logger);
+TgFacade& TgFacade::getInstance() {
+	static TgFacade instance;
 	return instance;
 }
 

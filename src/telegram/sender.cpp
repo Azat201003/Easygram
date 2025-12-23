@@ -1,10 +1,10 @@
 #include <telegram/sender.h>
 
-TgSender::TgSender(Logger* logger_, HandlerManager* handler_manager_) {
+TgSender::TgSender(HandlerManager* handler_manager_) {
 	this->client_manager_ = td::ClientManager::get_manager_singleton();
 	this->client_id_ = client_manager_->create_client_id();
 
-	this->logger = logger_;
+	this->logger = &UniqueLogger::getInstance();
 	this->handler_manager = handler_manager_;
 }
 

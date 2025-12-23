@@ -18,7 +18,7 @@ int main() {
   logger->setOutputFileAsPrint("log");
   logger->system(Logger::SystemMessages::START);
 
-  TgFacade &tg_facade = TgFacade::getInstance(logger);
+  TgFacade &tg_facade = TgFacade::getInstance();
 
   screen.Loop(getRenderer(screen, logger));
   logger->system(Logger::SystemMessages::STOP);

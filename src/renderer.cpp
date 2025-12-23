@@ -35,7 +35,7 @@ Component getRenderer(ScreenInteractive &screen, Logger *logger) {
   });
   static std::thread updater([logger] () {
     while (running) {
-      TgFacade &tg_facade = TgFacade::getInstance(logger);
+      TgFacade &tg_facade = TgFacade::getInstance();
       tg_facade.update_response();
       std::this_thread::sleep_for(5ms);
     }

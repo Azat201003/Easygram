@@ -6,9 +6,9 @@ PasswordScene::PasswordScene(std::shared_ptr<int> page,
   components = std::make_shared<Components>();
   components->input_field = Input(&password, "Enter your password");
   components->quit_button = Button("Quit", screen.ExitLoopClosure());
-   components->continue_button = Button("Continue", [this, logger] {
-     TgFacade::getInstance(logger).set_password(password, &error);
-   });
+  components->continue_button = Button("Continue", [this] {
+    TgFacade::getInstance().set_password(password, &error);
+  });
 }
 
 Component PasswordScene::getComponent() {

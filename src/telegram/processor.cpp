@@ -23,8 +23,8 @@ template <class... F> auto overloaded(F... f) {
   return detail::overload<F...>(f...);
 }
 
-Processor::Processor(Logger* logger_, HandlerManager* handler_manager_, TgSender* sender_) {
-	this->logger = logger_;
+Processor::Processor(HandlerManager* handler_manager_, TgSender* sender_) {
+	this->logger = &UniqueLogger::getInstance();
 	this->handler_manager = handler_manager_;
 	this->sender = sender_;
 	this->client_manager_ = td::ClientManager::get_manager_singleton();

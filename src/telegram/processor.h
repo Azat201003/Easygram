@@ -20,12 +20,12 @@ private:
   void on_authorization_state_update();
 	std::string check_authentication_error(Object object);
 	std::uint64_t authentication_query_id_{0};
-public:
 	Logger* logger;
-	std::function<void(Object)> create_authentication_query_handler(string *error);
 	TgSender* sender;
 	HandlerManager* handler_manager;
-	Processor(Logger*, HandlerManager*, TgSender*);
+public:
+	std::function<void(Object)> create_authentication_query_handler(string *error);
+	Processor(HandlerManager*, TgSender*);
 	std::string error;
 
 	void process_response(td::ClientManager::Response response);
