@@ -20,4 +20,4 @@
 
 using namespace ftxui;
 
-Component getRenderer(ScreenInteractive &screen, ChatManager* chat_manager);
+Component getRenderer(ScreenInteractive &screen);

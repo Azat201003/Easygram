@@ -1,4 +1,6 @@
 #include <telegram/facade.h>
+#include <state.h>
+#include <memory>
 
 TgFacade::TgFacade() {
 	td::ClientManager::execute(
@@ -7,22 +9,20 @@ TgFacade::TgFacade() {
 	HandlerManager* handler_manager = new HandlerManager();
 	sender		= new TgSender(handler_manager);
 	processor	= new Processor(handler_manager, sender);
-	changeState = ChangingState::ENTERING;
 	sender->send_query(td_api::make_object<td_api::getOption>("version"), {});
 }
 
-void TgFacade::set_chat_manager(ChatManager* chat_manager) {
-	this->processor->set_chat_manager(chat_manager);
+void TgFacade::add_update_handler(int32_t object_id, UpdateHandler* update_handler) {
+	this->processor->add_update_handler(object_id, update_handler);
 }
 
-TgFacade& TgFacade::getInstance() {
-	static TgFacade instance;
-	return instance;
+void TgFacade::send_query(td_api::object_ptr<td_api::Function> f,
+                std::function<void(Object)> handler) {
+	sender->send_query(std::move(f), handler);
 }
-
 
 void TgFacade::set_code(std::string code, std::string* error) {
-	changeState = ChangingState::LOADING;
+	state::changeState = state::ChangingAuthState::LOADING;
 	sender->send_query(
 		td_api::make_object<td_api::checkAuthenticationCode>(code),
 		processor->create_authentication_query_handler(error)
@@ -30,7 +30,7 @@ void TgFacade::set_code(std::string code, std::string* error) {
 }
 
 void TgFacade::set_phone(std::string phone, std::string* error) {
-	changeState = ChangingState::LOADING;
+	state::changeState = state::ChangingAuthState::LOADING;
 	sender->send_query(
 		td_api::make_object<td_api::setAuthenticationPhoneNumber>(phone, nullptr),
 		processor->create_authentication_query_handler(error)
@@ -38,7 +38,7 @@ void TgFacade::set_phone(std::string phone, std::string* error) {
 }
 
 void TgFacade::set_password(std::string password, std::string* error) {
-	changeState = ChangingState::LOADING;
+	state::changeState = state::ChangingAuthState::LOADING;
 	sender->send_query(
 		td_api::make_object<td_api::checkAuthenticationPassword>(password),
 		processor->create_authentication_query_handler(error)

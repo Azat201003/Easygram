@@ -36,7 +36,7 @@ private:
 
 	ChatManager* chat_manager;	
 public:
-  MainScene(std::shared_ptr<int> page, ScreenInteractive &screen, ChatManager* chat_manager);
+  MainScene(std::shared_ptr<int> page, ScreenInteractive &screen);
   Component getComponent() override;
   Element getElement() override;
 };

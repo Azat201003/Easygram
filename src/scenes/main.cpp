@@ -6,10 +6,10 @@
 #include <string>
 #include <unordered_set>
 
-MainScene::MainScene(std::shared_ptr<int> page, ScreenInteractive &screen, ChatManager* chat_manager)
+MainScene::MainScene(std::shared_ptr<int> page, ScreenInteractive &screen)
     : Scene(page, screen) {
   logger->debug("MainScene::MainScene");
-	this->chat_manager = chat_manager;
+	this->chat_manager = &ChatManager::getInstance();
 	components = std::make_shared<Components>();
   components->quit_button = Button("Quit", screen.ExitLoopClosure());
   updateChatList();
