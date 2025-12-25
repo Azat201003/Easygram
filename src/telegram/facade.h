@@ -3,23 +3,23 @@
 #include <telegram/sender.h>
 #include <telegram/processor.h>
 #include <logger/logger.h>
-#include <utils/chats.h>
+#include <utils/singleton.h>
 
-class TgFacade {
+// This class encapsulates, by delegating to other classes, methods for interacting with TDLib
+class TgFacade : public Singleton<TgFacade> {
 private:
-	enum ChangingState { ENTERING, LOADING, ERROR };
-	ChangingState changeState;
 	std::unique_ptr<td::ClientManager> client_manager_;
 	Logger* logger;
 	Processor* processor;
 	TgSender* sender;
 public:
 	TgFacade();
-	static TgFacade& getInstance();
 	void set_code(std::string code, std::string* error);
 	void set_phone(std::string phone, std::string* error);
 	void set_password(std::string password, std::string* error);
+	void send_query(td_api::object_ptr<td_api::Function> f,
+                std::function<void(Object)> handler);
+	void add_update_handler(int32_t object_id, UpdateHandler* update_handler);
 	void update_response();
-	void set_chat_manager(ChatManager* chat_manager);
 };
 

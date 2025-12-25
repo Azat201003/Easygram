@@ -8,6 +8,7 @@
 
 using Object = td::td_api::object_ptr<td::td_api::Object>;
 
+// handlers for response on requests
 class HandlerManager {
 private:
 	std::map<std::uint64_t, std::function<void(Object)>> handlers_;

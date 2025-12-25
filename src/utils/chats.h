@@ -1,5 +1,5 @@
 #pragma once
-
+ 
 #include <td/telegram/td_api.h>
 #include <td/telegram/td_api.hpp>
 
@@ -8,6 +8,9 @@
 #include <vector>
 #include <map>
 #include <string>
+
+#include <utils/singleton.h>
+#include <telegram/facade.h>
 
 namespace td_api = td::td_api;
 typedef td_api::object_ptr<td_api::chat> TdChat;
@@ -18,7 +21,7 @@ struct Chat {
 	std::string title;
 };
 
-class ChatManager {
+class ChatManager : public Singleton<ChatManager> {
 private:
 	std::unordered_map<int64_t, TdChat> chats_;
 	Logger* logger;
@@ -28,5 +31,15 @@ public:
 	void updateChatTitle(int64_t chat_id, const std::string& title);
 	void updateChatPosition(int64_t chat_id, td_api::object_ptr<td_api::chatPosition> position);
 	std::vector<Chat> getSortedChats(int32_t chat_list_id);
+};
+
+class ChatPositionUpdateHandler : public UpdateHandler {
+public:
+	void update(td_api::Object&);
+};
+
+class NewChatUpdateHandler : public UpdateHandler {
+public:
+	void update(td_api::Object&);
 };
 

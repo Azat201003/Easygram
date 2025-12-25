@@ -2,8 +2,10 @@
 #include <state.h>
 #include <telegram/facade.h>
 #include <utils/chats.h>
+#include <logger/logger.h>
+#include <string>
 
-Component getRenderer(ScreenInteractive &screen, ChatManager* chat_manager) {
+Component getRenderer(ScreenInteractive &screen) {
   auto page = std::make_shared<int>(1);
   std::vector<std::shared_ptr<Scene>> scenes;
 
@@ -11,7 +13,7 @@ Component getRenderer(ScreenInteractive &screen, ChatManager* chat_manager) {
   scenes.push_back(std::make_shared<PhoneScene>(page, screen));
   scenes.push_back(std::make_shared<CodeScene>(page, screen));
   scenes.push_back(std::make_shared<PasswordScene>(page, screen));
-  scenes.push_back(std::make_shared<MainScene>(page, screen, chat_manager));
+  scenes.push_back(std::make_shared<MainScene>(page, screen));
 
   std::vector<Component> components;
   for (auto &scene : scenes) {
@@ -22,16 +24,17 @@ Component getRenderer(ScreenInteractive &screen, ChatManager* chat_manager) {
   static std::atomic<bool> running(true);
   static std::thread worker([scenes, page] {
     while (running) {
-      if (State::changeState != State::ChangingAuthState::LOADING &&
-          State::authState != State::AuthState::AUTHENTICATED) {
-        (*page) = State::authState;
-      } else if (State::changeState == State::ChangingAuthState::LOADING) {
-        (*page) = 0;
-      } else {
+      if (state::changeState != state::ChangingAuthState::LOADING &&
+          state::authState != state::AuthState::AUTHENTICATED) {
+        (*page) = state::authState;
+      } else if (state::changeState != state::ChangingAuthState::LOADING) {
         (*page) = 4;
+      } else {
+        (*page) = 0;
       }
-       scenes[*page]->ping();
-       std::this_thread::sleep_for(100ms);
+			UniqueLogger::getInstance().debug("page: " + std::to_string(*page) + "\n\tstate::changeState: " + std::to_string(state::changeState) + "\n\tstate::authState: " + std::to_string(state::authState));
+      scenes[*page]->ping();
+      std::this_thread::sleep_for(100ms);
     }
   });
   static std::thread updater([] () {

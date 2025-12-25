@@ -18,10 +18,8 @@ int main() {
   logger->setOutputFileAsPrint("log");
   logger->system(Logger::SystemMessages::START);
 
-	ChatManager* chat_manager = new ChatManager();
   TgFacade &tg_facade = TgFacade::getInstance();
-	tg_facade.set_chat_manager(chat_manager);
 
-  screen.Loop(getRenderer(screen, chat_manager));
+  screen.Loop(getRenderer(screen));
   logger->system(Logger::SystemMessages::STOP);
 }

@@ -28,17 +28,17 @@ Processor::Processor(HandlerManager* handler_manager_, TgSender* sender_) {
 	this->client_manager_ = td::ClientManager::get_manager_singleton();
 }
 
-void Processor::set_chat_manager(ChatManager* chat_manager) {
-	this->chat_manager = chat_manager;
+void Processor::add_update_handler(int32_t object_id, UpdateHandler* update_handler) {
+	update_handlers[object_id].push_back(update_handler);	
 }
 
 void Processor::process_response(td::ClientManager::Response response) {
 	if (!response.object) {
 		logger->named<Processor>("No response");
 		return;
-	}
-	logger->named<Processor>(response.request_id + " " + 
-													 to_string(response.object));
+}
+	//logger->named<Processor>(response.request_id + " " + 
+	//												 to_string(response.object));
 	if (response.request_id == 0) {
 		return process_update(std::move(response.object));
 	}
@@ -46,6 +46,9 @@ void Processor::process_response(td::ClientManager::Response response) {
 }
 
 void Processor::process_update(Object update) {
+	for (UpdateHandler* update_handler : update_handlers[update->get_id()])
+		update_handler->update(*update);
+
 	td_api::downcast_call(
 		*update,
 		overloaded(
@@ -54,12 +57,11 @@ void Processor::process_update(Object update) {
 					std::move(update_authorization_state.authorization_state_);
 				on_authorization_state_update();
 			},
+			/*
 			[this](td_api::updateNewChat &update_new_chat) {
 				logger->debug("Update new chat handled");
 				if (update_new_chat.chat_ == nullptr)
 					return;
-
-				chat_manager->getSortedChats(0);
 
 				logger->debug("Chat: \"" + update_new_chat.chat_->title_ + "\", " + std::to_string(update_new_chat.chat_->id_));
 				td_api::chat* chat = update_new_chat.chat_.release();
@@ -90,6 +92,7 @@ void Processor::process_update(Object update) {
 						"Receive message: [chat_id:" + to_string(chat_id) +
 						"] [from:" + sender_name + "] [" + text + "]");
 			},
+			*/
 			[](auto &update) {}
 		)
 	);
@@ -97,40 +100,40 @@ void Processor::process_update(Object update) {
 
 void Processor::on_authorization_state_update() {
 	authentication_query_id_++;
-	State::changeState = State::ChangingAuthState::ENTERING;
+	state::changeState = state::ChangingAuthState::ENTERING;
 	td_api::downcast_call(
 		*authorization_state_,
 		overloaded(
 			[this](td_api::authorizationStateReady &) {
-				State::authState = State::AuthState::AUTHENTICATED;
+				state::authState = state::AuthState::AUTHENTICATED;
 				logger->named<Processor>("Authorization is completed");
-					static std::thread loadChats([this] () {
-						sender->send_query(td_api::make_object<td_api::loadChats>(
-							td_api::make_object<td_api::chatListMain>(), 100), 
-							[this] (Object object) {
-								if (object->get_id() == td_api::error::ID) {
-									this->logger->error("loading chats error");
-									return;
-								}
+				static std::thread loadChats([this] () {
+					sender->send_query(td_api::make_object<td_api::loadChats>(
+						td_api::make_object<td_api::chatListMain>(), 100), 
+						[this] (Object object) {
+							if (object->get_id() == td_api::error::ID) {
+								this->logger->error("loading chats error");
+								return;
 							}
-						);
-					});
+						}
+					);
+				});
 			},
 			[this](td_api::authorizationStateLoggingOut &) {
-				State::authState = State::AuthState::CLOSED;
+				state::authState = state::AuthState::CLOSED;
 				logger->named<Processor>("Logging out");
 			},
 			[this](td_api::authorizationStateClosing &) {
 				logger->named<Processor>("closed");
 			},
 			[this](td_api::authorizationStateClosed &) {
-				State::authState = State::AuthState::CLOSED;
-				State::needRestart = true;
+				state::authState = state::AuthState::CLOSED;
+				state::needRestart = true;
 				logger->named<Processor>("Terminated");
 			},
 			[this](td_api::authorizationStateWaitPhoneNumber &) {
 				logger->named<Processor>("Entering phone number");
-				State::authState = State::AuthState::PHONE_ENTER;
+				state::authState = state::AuthState::PHONE_ENTER;
 			},
 			[this](td_api::authorizationStateWaitPremiumPurchase &) {
 				logger->named<Processor>(
@@ -144,13 +147,13 @@ void Processor::on_authorization_state_update() {
 			},
 			[this](td_api::authorizationStateWaitCode &) {
 				logger->named<Processor>("App auth code entering");
-				State::authState = State::AuthState::CODE_ENTER;
+				state::authState = state::AuthState::CODE_ENTER;
 			},
 			[this](td_api::authorizationStateWaitRegistration &) {
 			},
 			[this](td_api::authorizationStateWaitPassword &) {
 				logger->named<Processor>("Password entering");
-				State::authState = State::AuthState::PASSWORD_ENTER;
+				state::authState = state::AuthState::PASSWORD_ENTER;
 			},
 			[this](td_api::authorizationStateWaitOtherDeviceConfirmation &State) {
 				logger->named<Processor>(
@@ -158,7 +161,7 @@ void Processor::on_authorization_state_update() {
 						State.link_);
 			},
 			[this](td_api::authorizationStateWaitTdlibParameters &) {
-				State::authState = State::AuthState::TDLIB_PARAMS;
+				state::authState = state::AuthState::TDLIB_PARAMS;
 				logger->named<Processor>(
 						"AuthorizationStateWaitTdlibParameters entering");
 				auto request = td_api::make_object<td_api::setTdlibParameters>();
@@ -190,10 +193,10 @@ std::string Processor::check_authentication_error(Object object) {
 
 std::function<void(Object)> Processor::create_authentication_query_handler(string *error) {
   return [this, id = authentication_query_id_, error](Object object) {
-    logger->named<Processor>("authentication_query_handler\n");
+    logger->named<Processor>("authentication_query_handler");
     if (id == authentication_query_id_) {
       (*error) = check_authentication_error(std::move(object));
-			State::changeState = State::ChangingAuthState::ERROR;
+			state::changeState = state::ChangingAuthState::ERROR;
     }
 	};
 }
