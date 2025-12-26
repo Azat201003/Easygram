@@ -13,6 +13,7 @@ void ChatManager::addOrUpdateChat(int64_t chat_id, TdChat chat) {
 	logger->debug("ChatManager::addOrUpdateChat");
 	if (chat)
 		chats_[chat_id] = std::move(chat);
+	updated = true;
 }
 
 void ChatManager::updateChatPosition(int64_t chat_id, td_api::object_ptr<td_api::chatPosition> position) {
@@ -36,6 +37,7 @@ void ChatManager::updateChatPosition(int64_t chat_id, td_api::object_ptr<td_api:
 	if (!found) {
 		it->second->positions_.push_back(std::move(position));
 	}
+	updated = true;
 }
 
 void ChatManager::updateChatTitle(int64_t chat_id, const std::string& title) {

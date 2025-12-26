@@ -21,6 +21,7 @@ private:
     Component chat_list;
     Component folders;
     Component chat;
+		Component resizable;
   };
   std::shared_ptr<Components> components;
   std::vector<std::string> chat_titles;
@@ -30,6 +31,7 @@ private:
   int selected_visible_chat = 0;
   int selected_folder = 0;
   int chatMenuStart = 0;
+	int left_width = 50;
 
 	void updateChatList();
 	MenuOption create_autoscrolled();
