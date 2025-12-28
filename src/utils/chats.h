@@ -35,13 +35,3 @@ public:
 	bool updated;
 };
 
-class ChatPositionUpdateHandler : public UpdateHandler {
-public:
-	void update(td_api::Object&);
-};
-
-class NewChatUpdateHandler : public UpdateHandler {
-public:
-	void update(td_api::Object&);
-};
-

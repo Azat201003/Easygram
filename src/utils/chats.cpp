@@ -3,6 +3,30 @@
 #include <algorithm>
 #include <memory>
 
+class NewChatUpdateHandler : public UpdateHandler {
+public:
+	void update(td_api::Object &object) override {
+		td_api::updateNewChat& update_new_chat = static_cast<td_api::updateNewChat&>(object); 
+		UniqueLogger::getInstance().debug("Update new chat handled");
+		if (update_new_chat.chat_ == nullptr)
+			return;
+
+		td_api::chat* chat = update_new_chat.chat_.release();
+		UniqueLogger::getInstance().debug("Chat: \"" + chat->title_ + "\", " + std::to_string(chat->id_));
+		ChatManager::getInstance().addOrUpdateChat(chat->id_, td_api::object_ptr(chat));	
+	}
+};
+
+class ChatPositionUpdateHandler : public UpdateHandler {
+public:
+	void update(td_api::Object &object) override {
+		td_api::updateChatPosition& update_chat_position = static_cast<td_api::updateChatPosition&>(object); 
+
+		UniqueLogger::getInstance().debug("Update chat position handled");
+		ChatManager::getInstance().updateChatPosition(update_chat_position.chat_id_, std::move(update_chat_position.position_));
+	}
+};
+
 ChatManager::ChatManager() {
 	this->logger = &UniqueLogger::getInstance();
 	TgFacade::getInstance().add_update_handler(td_api::updateNewChat::ID, new NewChatUpdateHandler());
@@ -75,23 +99,5 @@ std::vector<Chat> ChatManager::getSortedChats(int32_t chat_list_id) {
 	});
 	logger->debug("ChatManager::getSortedChats");
 	return result;
-}
-
-void NewChatUpdateHandler::update(td_api::Object &object) {
-	td_api::updateNewChat& update_new_chat = static_cast<td_api::updateNewChat&>(object); 
-	UniqueLogger::getInstance().debug("Update new chat handled");
-	if (update_new_chat.chat_ == nullptr)
-		return;
-
-	td_api::chat* chat = update_new_chat.chat_.release();
-	UniqueLogger::getInstance().debug("Chat: \"" + chat->title_ + "\", " + std::to_string(chat->id_));
-	ChatManager::getInstance().addOrUpdateChat(chat->id_, td_api::object_ptr(chat));	
-}
-
-void ChatPositionUpdateHandler::update(td_api::Object &object) {
-	td_api::updateChatPosition& update_chat_position = static_cast<td_api::updateChatPosition&>(object); 
-
-	UniqueLogger::getInstance().debug("Update chat position handled");
-	ChatManager::getInstance().updateChatPosition(update_chat_position.chat_id_, std::move(update_chat_position.position_));
 }
 

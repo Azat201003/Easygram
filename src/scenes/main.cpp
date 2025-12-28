@@ -10,31 +10,45 @@ MainScene::MainScene(std::shared_ptr<int> page, ScreenInteractive &screen)
     : Scene(page, screen) {
   logger->debug("MainScene::MainScene");
 	this->chat_manager = &ChatManager::getInstance();
+	this->message_manager = &MessageManager::getInstance();
 	components = std::make_shared<Components>();
-  components->quit_button = Button("Quit", screen.ExitLoopClosure());
   updateChatList();
+  
+	components->quit_button = Button("Quit", screen.ExitLoopClosure());
   components->chat_list = Menu(&chat_titles, &selected_chat);
   components->folders = Menu(&folder_titles, &selected_folder);
-  components->chat = Renderer([] { return text("Here will be messages") | borderEmpty; });
-  
+	components->chat = Container::Vertical({});
+	components->input = Input(&message_input, "Type message..");
+	components->submit_button = Button("Send", [] {});
+
 	components->resizable = ResizableSplitLeft(
 		Renderer(Container::Vertical({components->chat_list, components->quit_button}), [this] {
 			struct winsize w;
 			ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
 			return vbox({
-					text("chats") | bold | center,
+					text("Chats") | bold | center | size(HEIGHT, EQUAL, 3),
 					separator(),
-					components->chat_list->Render() | yframe | border |
-						size(HEIGHT, EQUAL, w.ws_row - 8),
+					components->chat_list->Render() | yframe |
+						size(HEIGHT, EQUAL, w.ws_row - 7),
 					separator(),
-					components->quit_button->Render() | center,
+					components->quit_button->Render() | center | size(HEIGHT, EQUAL, 4),
 			}) | size(HEIGHT, EQUAL, w.ws_row);
 		}),
-		Renderer([this] {
+		Renderer(Container::Vertical({components->chat, Container::Horizontal({components->input, components->submit_button})}), [this] {
 			struct winsize w;
 			ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
+			std::string chat_title = "Unselected";
+			if (chats.size() && selected_chat >= 0 && selected_chat < chats.size())
+				chat_title = chats[selected_chat].title;
 			return vbox({
-
+				text(chat_title) | bold | center | size(HEIGHT, EQUAL, 3),
+				separator(),
+				components->chat->Render() | size(HEIGHT, EQUAL, w.ws_row - 8),
+				separator(),
+				hbox({
+					components->input->Render(),
+					components->submit_button->Render() | size(WIDTH, EQUAL, 8) | center
+				}) | size(HEIGHT, EQUAL, 5)
 			});
 		}),
 		&left_width
@@ -45,14 +59,9 @@ void MainScene::updateChatList() {
   if (chat_manager->updated) {
 		chat_manager->updated = false;
 		chat_titles.clear();
-		logger->debug("MainScene::updateChatList 1");
-		for (const Chat &chat : chat_manager->getSortedChats(td_api::chatListMain::ID)) {
+		chats = chat_manager->getSortedChats(td_api::chatListMain::ID);
+		for (Chat chat : chats)
 			chat_titles.push_back(chat.title);
-		}
-		logger->debug("MainScene::updateChatList 2");
-		if (chat_titles.empty()) {
-			chat_titles.push_back("No chats available");
-		}
 	}
 }
 
