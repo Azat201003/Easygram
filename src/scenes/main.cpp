@@ -12,7 +12,6 @@ MainScene::MainScene(std::shared_ptr<int> page, ScreenInteractive &screen)
 	this->chat_manager = &ChatManager::getInstance();
 	this->message_manager = &MessageManager::getInstance();
 	components = std::make_shared<Components>();
-  updateChatList();
   
 	components->quit_button = Button("Quit", screen.ExitLoopClosure());
   components->chat_list = Menu(&chat_titles, &selected_chat);
@@ -65,6 +64,22 @@ void MainScene::updateChatList() {
 	}
 }
 
+void MainScene::updateMessageList() {
+	if (chats.size() && selected_chat >= 0 && selected_chat < chats.size()) {
+		if (message_manager->updated || prev_selected_chat != selected_chat) {
+			prev_selected_chat = selected_chat;
+			message_manager->update_messages(chats[selected_chat].id);
+			message_manager->updated = false;
+			components->chat->DetachAllChildren();
+			for (Message message : message_manager->get_messages(chats[selected_chat].id)) {
+				components->chat->Add(Renderer([message] {
+					return text(message.text);
+				}));
+			}
+		}
+	}
+}
+
 Component MainScene::getComponent() {
 	return components->resizable;
 }
@@ -73,6 +88,7 @@ Element MainScene::getElement() {
   struct winsize w;
   ioctl(STDOUT_FILENO, TIOCGWINSZ, &w);
   updateChatList();
+	updateMessageList();
   return components->resizable->Render()	|
 				 size(WIDTH, EQUAL, w.ws_col)			|
 				 size(HEIGHT, EQUAL, w.ws_row)		;

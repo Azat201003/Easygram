@@ -34,7 +34,7 @@ Component getRenderer(ScreenInteractive &screen) {
       }
 			UniqueLogger::getInstance().debug("page: " + std::to_string(*page) + "\n\tstate::changeState: " + std::to_string(state::changeState) + "\n\tstate::authState: " + std::to_string(state::authState));
       scenes[*page]->ping();
-      std::this_thread::sleep_for(100ms);
+      std::this_thread::sleep_for(500ms);
     }
   });
   static std::thread updater([] () {
