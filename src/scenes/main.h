@@ -32,7 +32,7 @@ private:
   std::vector<std::string> chat_titles;
   std::vector<std::string> folder_titles;
   int selected_chat = 0;
-  int prev_selected_chat = 0;
+  int prev_selected_chat = -1;
 	int selected_folder = 0;
 	int left_width = 50;
 

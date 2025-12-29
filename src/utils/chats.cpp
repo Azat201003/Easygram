@@ -27,10 +27,21 @@ public:
 	}
 };
 
+class ChatLastMessageUpdateHandler : public UpdateHandler {
+public:
+	void update(td_api::Object &object) override {
+		td_api::updateChatLastMessage& update_last_message = static_cast<td_api::updateChatLastMessage&>(object); 
+
+		UniqueLogger::getInstance().debug("Update chat last message handled");
+		ChatManager::getInstance().updateChatPositions(update_last_message.chat_id_, std::move(update_last_message.positions_));
+	}
+};
+
 ChatManager::ChatManager() {
 	this->logger = &UniqueLogger::getInstance();
 	TgFacade::getInstance().add_update_handler(td_api::updateNewChat::ID, new NewChatUpdateHandler());
 	TgFacade::getInstance().add_update_handler(td_api::updateChatPosition::ID, new ChatPositionUpdateHandler());
+	TgFacade::getInstance().add_update_handler(td_api::updateChatLastMessage::ID, new ChatLastMessageUpdateHandler());
 }
 
 void ChatManager::addOrUpdateChat(int64_t chat_id, TdChat chat) {
@@ -60,6 +71,18 @@ void ChatManager::updateChatPosition(int64_t chat_id, td_api::object_ptr<td_api:
 	}
 	updated = true;
 	logger->debug("In ChatManager was interupted updateChatPosition successful, found: " + std::to_string(found));
+}
+
+void ChatManager::updateChatPositions(int64_t chat_id, std::vector<td_api::object_ptr<td_api::chatPosition>> positions) {
+	auto it = chats_.find(chat_id);
+	if (it == chats_.end()) {
+		logger->debug("In ChatManager was interapted updateChatPositions, but chat_id in chats_ wasn't found");
+		return;
+	}
+	it->second->positions_ = std::move(positions);
+	
+	updated = true;
+	logger->debug("In ChatManager was interupted updateChatPositions successful");
 }
 
 void ChatManager::updateChatTitle(int64_t chat_id, const std::string& title) {

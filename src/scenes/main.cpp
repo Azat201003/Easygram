@@ -42,7 +42,7 @@ MainScene::MainScene(std::shared_ptr<int> page, ScreenInteractive &screen)
 			return vbox({
 				text(chat_title) | bold | center | size(HEIGHT, EQUAL, 3),
 				separator(),
-				components->chat->Render() | size(HEIGHT, EQUAL, w.ws_row - 8),
+				components->chat->Render() | size(HEIGHT, EQUAL, w.ws_row - 8) | yframe,
 				separator(),
 				hbox({
 					components->input->Render(),
@@ -65,16 +65,27 @@ void MainScene::updateChatList() {
 }
 
 void MainScene::updateMessageList() {
-	if (chats.size() && selected_chat >= 0 && selected_chat < chats.size()) {
-		if (message_manager->updated || prev_selected_chat != selected_chat) {
+	if (message_manager->updated || prev_selected_chat != selected_chat) {
+		if (chats.size() && selected_chat >= 0 && selected_chat < chats.size()) {
 			prev_selected_chat = selected_chat;
-			message_manager->update_messages(chats[selected_chat].id);
 			message_manager->updated = false;
+			message_manager->update_messages(chats[selected_chat].id);
 			components->chat->DetachAllChildren();
 			for (Message message : message_manager->get_messages(chats[selected_chat].id)) {
-				components->chat->Add(Renderer([message] {
-					return text(message.text);
-				}));
+				MenuEntryOption option;
+				option.transform = [message] (EntryState state) {
+					Element e = paragraph(message.text) | size(WIDTH, LESS_THAN, 90);
+					if (message.is_outgoing)
+						e |= align_right;
+					if (state.focused) {
+						e = e | inverted;
+					}
+					if (state.active) {
+						e = e | bold;
+					}
+					return e;
+				};
+				components->chat->Add(MenuEntry(message.text, option));
 			}
 		}
 	}

@@ -57,42 +57,6 @@ void Processor::process_update(Object update) {
 					std::move(update_authorization_state.authorization_state_);
 				on_authorization_state_update();
 			},
-			/*
-			[this](td_api::updateNewChat &update_new_chat) {
-				logger->debug("Update new chat handled");
-				if (update_new_chat.chat_ == nullptr)
-					return;
-
-				logger->debug("Chat: \"" + update_new_chat.chat_->title_ + "\", " + std::to_string(update_new_chat.chat_->id_));
-				td_api::chat* chat = update_new_chat.chat_.release();
-				chat_manager->addOrUpdateChat(chat->id_, td_api::object_ptr(chat));
-			},
-			[this](td_api::updateChatPosition &update_chat_position) {
-				logger->debug("Update chat position handled");
-				chat_manager->updateChatPosition(update_chat_position.chat_id_, std::move(update_chat_position.position_));
-			},
-			[this](td_api::updateChatTitle &update_chat_title) {
-				logger->debug("Update chat title handled");
-				chat_manager->updateChatTitle(update_chat_title.chat_id_, update_chat_title.title_);
-			},
-			[this](td_api::updateUser &update_user) {
-				auto user_id = update_user.user_->id_;
-			},
-			[this](td_api::updateNewMessage &update_new_message) {
-				auto chat_id = update_new_message.message_->chat_id_;
-				std::string sender_name;
-				std::string text;
-				if (update_new_message.message_->content_->get_id() ==
-							td_api::messageText::ID) {
-						text = static_cast<td_api::messageText &>(
-											 *update_new_message.message_->content_)
-											 .text_->text_;
-				}
-				logger->named<Processor>(
-						"Receive message: [chat_id:" + to_string(chat_id) +
-						"] [from:" + sender_name + "] [" + text + "]");
-			},
-			*/
 			[](auto &update) {}
 		)
 	);
@@ -204,7 +168,7 @@ std::function<void(Object)> Processor::create_authentication_query_handler(strin
 void Processor::update_response() {
 	td::ClientManager::Response response;
   do {
-	  response = client_manager_->receive(1);
+	  response = client_manager_->receive(10);
   	process_response(std::move(response));
 	} while (response.object);
 }

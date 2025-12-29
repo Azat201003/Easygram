@@ -27,14 +27,15 @@ void MessageManager::update_messages(int64_t chat_id) {
 		), [this, chat_id] (Object object) {
 			td_api::object_ptr<td_api::messages> messages = td_api::move_object_as<td_api::messages>(object);
 			for (int32_t i = 0; i < messages->total_count_; ++i) {
-				if (!message_ids_.contains(messages->messages_[i]->id_)) {
-					message_ids_.insert(messages->messages_[i]->id_);
+				if (!chat_message_ids_.contains({messages->messages_[i]->chat_id_, messages->messages_[i]->id_})) {
+					chat_message_ids_.insert({messages->messages_[i]->chat_id_, messages->messages_[i]->id_});
 					messages_[chat_id].push_front(std::move(messages->messages_[i]));
 				}
 			}
 			if (messages_[chat_id].size() && messages->total_count_) {
 				first_message_id_[chat_id] = (*--messages_[chat_id].end())->id_;
 				UniqueLogger::getInstance().debug("MessageManager::update_messages new messages handled");
+				updated = true;
 			}
 		}
 	);
@@ -56,8 +57,9 @@ std::vector<Message> MessageManager::get_messages(int64_t chat_id) {
 
 void MessageManager::new_message(TdMessage message) {
 	updated = true;
-	if (!message_ids_.contains(message->id_)) {
-		message_ids_.insert(message->id_);
+	
+	if (!chat_message_ids_.contains({message->chat_id_, message->id_})) {
+		chat_message_ids_.insert({message->chat_id_, message->id_});
 		messages_[message->chat_id_].push_back(std::move(message));
 	}
 }

@@ -29,7 +29,7 @@ public:
 	bool updated = false;
 	MessageManager();
 private:
-	std::set<int64_t> message_ids_;
+	std::set<pair<int64_t, int64_t>> chat_message_ids_;
 	std::map<int64_t, int64_t> first_message_id_;
 	std::map<int64_t, std::deque<TdMessage>> messages_; // by chat_id
 };
