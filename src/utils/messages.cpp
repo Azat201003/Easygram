@@ -33,7 +33,7 @@ void MessageManager::update_messages(int64_t chat_id) {
 				}
 			}
 			if (messages_[chat_id].size() && messages->total_count_) {
-				first_message_id_[chat_id] = (*--messages_[chat_id].end())->id_;
+				first_message_id_[chat_id] = (*messages_[chat_id].begin())->id_;
 				UniqueLogger::getInstance().debug("MessageManager::update_messages new messages handled");
 				updated = true;
 			}

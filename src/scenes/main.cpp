@@ -8,17 +8,30 @@
 
 MainScene::MainScene(std::shared_ptr<int> page, ScreenInteractive &screen)
     : Scene(page, screen) {
-  logger->debug("MainScene::MainScene");
+	logger->debug("MainScene::MainScene");
 	this->chat_manager = &ChatManager::getInstance();
 	this->message_manager = &MessageManager::getInstance();
 	components = std::make_shared<Components>();
   
 	components->quit_button = Button("Quit", screen.ExitLoopClosure());
-  components->chat_list = Menu(&chat_titles, &selected_chat);
-  components->folders = Menu(&folder_titles, &selected_folder);
+	components->chat_list = Menu(&chat_titles, &selected_chat);
+	components->folders = Menu(&folder_titles, &selected_folder);
 	components->chat = Container::Vertical({});
 	components->input = Input(&message_input, "Type message..");
-	components->submit_button = Button("Send", [] {});
+	components->submit_button = Button("Send", [this] {
+		if (chats.size() && selected_chat >= 0 && selected_chat < chats.size()) {
+			auto send_message = td_api::make_object<td_api::sendMessage>();
+			send_message->chat_id_ = chats[selected_chat].id;
+			auto message_content = td_api::make_object<td_api::inputMessageText>();
+			message_content->text_ = td_api::make_object<td_api::formattedText>();
+			message_content->text_->text_ = message_input;
+			send_message->input_message_content_ = std::move(message_content);
+
+			TgFacade::getInstance().send_query(std::move(send_message), { });
+
+			message_input = "";
+		}
+	});
 
 	components->resizable = ResizableSplitLeft(
 		Renderer(Container::Vertical({components->chat_list, components->quit_button}), [this] {
@@ -42,7 +55,7 @@ MainScene::MainScene(std::shared_ptr<int> page, ScreenInteractive &screen)
 			return vbox({
 				text(chat_title) | bold | center | size(HEIGHT, EQUAL, 3),
 				separator(),
-				components->chat->Render() | size(HEIGHT, EQUAL, w.ws_row - 8) | yframe,
+				components->chat->Render() | yframe | size(HEIGHT, EQUAL, w.ws_row - 9),
 				separator(),
 				hbox({
 					components->input->Render(),
@@ -65,16 +78,18 @@ void MainScene::updateChatList() {
 }
 
 void MainScene::updateMessageList() {
-	if (message_manager->updated || prev_selected_chat != selected_chat) {
+	if (prev_selected_chat != selected_chat) {
+		prev_selected_chat = selected_chat;
+		message_manager->updated = false;
+		message_manager->update_messages(chats[selected_chat].id);
+	}
+	if (message_manager->updated) {
 		if (chats.size() && selected_chat >= 0 && selected_chat < chats.size()) {
-			prev_selected_chat = selected_chat;
-			message_manager->updated = false;
-			message_manager->update_messages(chats[selected_chat].id);
 			components->chat->DetachAllChildren();
 			for (Message message : message_manager->get_messages(chats[selected_chat].id)) {
 				MenuEntryOption option;
 				option.transform = [message] (EntryState state) {
-					Element e = paragraph(message.text) | size(WIDTH, LESS_THAN, 90);
+					Element e = paragraph(message.text) | size(WIDTH, LESS_THAN, 50);
 					if (message.is_outgoing)
 						e |= align_right;
 					if (state.focused) {
