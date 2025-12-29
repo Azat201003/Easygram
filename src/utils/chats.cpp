@@ -46,12 +46,9 @@ void ChatManager::updateChatPosition(int64_t chat_id, td_api::object_ptr<td_api:
 		logger->debug("In ChatManager was interapted updateChatPosition, but chat_id in chats_ wasn't found");
 		return;
 	}
-	if(std::to_address(it) == nullptr) {
-		logger->debug("In ChatManager was interupted updateChatPosition, but chat is nullptr");
-		return;
-	}	
 	bool found = false;
-	for (auto &pos : it->second->positions_) {
+	td_api::chat* chat = it->second.get();
+	for (auto &pos : chat->positions_) {
 		if (pos && pos->list_->get_id() == position->list_->get_id()) {
 			pos = std::move(position);
 			found = true;
@@ -59,9 +56,10 @@ void ChatManager::updateChatPosition(int64_t chat_id, td_api::object_ptr<td_api:
 		}
 	}
 	if (!found) {
-		it->second->positions_.push_back(std::move(position));
+		chat->positions_.push_back(std::move(position));
 	}
 	updated = true;
+	logger->debug("In ChatManager was interupted updateChatPosition successful, found: " + std::to_string(found));
 }
 
 void ChatManager::updateChatTitle(int64_t chat_id, const std::string& title) {
