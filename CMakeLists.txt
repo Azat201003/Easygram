@@ -8,20 +8,21 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(Td REQUIRED)
 find_package(logger REQUIRED)
+find_package(ftxui REQUIRED)
 
-include(FetchContent)
+#include(FetchContent)
 
-set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
-set(FETCHCONTENT_QUIET OFF)
+#set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
+#set(FETCHCONTENT_QUIET OFF)
 
-FetchContent_Declare(ftxui
-  GIT_REPOSITORY https://github.com/arthursonzogni/ftxui.git
-  GIT_TAG        v5.0.0
-  GIT_PROGRESS   TRUE
-  GIT_SHALLOW    TRUE
-  EXCLUDE_FROM_ALL
-)
-FetchContent_MakeAvailable(ftxui)
+#FetchContent_Declare(ftxui
+#  GIT_REPOSITORY https://github.com/arthursonzogni/ftxui.git
+#  GIT_TAG        v5.0.0
+# GIT_PROGRESS   TRUE
+#  GIT_SHALLOW    TRUE
+#  EXCLUDE_FROM_ALL
+#)
+#FetchContent_MakeAvailable(ftxui)
 
 include_directories(src)
 
