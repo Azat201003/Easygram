@@ -1,6 +1,6 @@
 #include <telegram/processor.h>
 #include <state.h>
-#include <config.h>
+#include <utils/config.h>
 #include <thread>
 
 namespace detail {
@@ -36,9 +36,8 @@ void Processor::process_response(td::ClientManager::Response response) {
 	if (!response.object) {
 		logger->named<Processor>("No response");
 		return;
-}
-	//logger->named<Processor>(response.request_id + " " + 
-	//												 to_string(response.object));
+	}
+	
 	if (response.request_id == 0) {
 		return process_update(std::move(response.object));
 	}
@@ -168,8 +167,8 @@ void Processor::on_authorization_state_update() {
 				request->database_directory_ = "tdlib";
 				request->use_message_database_ = true;
 				request->use_secret_chats_ = true;
-				request->api_id_ = config::API_ID;
-				request->api_hash_ = config::API_HASH;
+				request->api_id_ = Config::API_ID;
+				request->api_hash_ = Config::API_HASH;
 				request->system_language_code_ = "en";
 				request->device_model_ = "Desktop";
 				request->application_version_ = "1.0";

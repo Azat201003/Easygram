@@ -1,6 +1,7 @@
 #include <telegram/facade.h>
 #include <state.h>
 #include <memory>
+#include <utils/config.h>
 
 TgFacade::TgFacade() {
 	td::ClientManager::execute(
@@ -9,6 +10,40 @@ TgFacade::TgFacade() {
 	HandlerManager* handler_manager = new HandlerManager();
 	sender		= new TgSender(handler_manager);
 	processor	= new Processor(handler_manager, sender);
+	UniqueLogger::getInstance().debug((Config::PROXY_ENABLED?"enabled ":"disabled ") + Config::PROXY_SERVER + ":" + to_string(Config::PROXY_PORT) + ", secret: " + Config::PROXY_SECRET);
+	
+	// Add proxy
+	sender->send_query(td_api::make_object<td_api::addProxy>(
+		td_api::make_object<td_api::proxy>(
+			Config::PROXY_SERVER,
+			Config::PROXY_PORT,
+			td_api::make_object<td_api::proxyTypeMtproto>(
+				Config::PROXY_SECRET
+			)
+		),
+		Config::PROXY_ENABLED
+	), [&] (Object object) {
+		if (object->get_id() == td_api::addedProxy::ID) {
+			UniqueLogger::getInstance().debug("Proxy added!");
+
+			auto added_proxy = td::move_tl_object_as<td_api::addedProxy>(object);
+			
+			sender->send_query(
+				td_api::make_object<td_api::pingProxy>(std::move(added_proxy->proxy_)),
+				[](Object ping_obj) {
+					if (ping_obj->get_id() == td_api::seconds::ID) {
+						auto sec = td::move_tl_object_as<td_api::seconds>(ping_obj);
+						UniqueLogger::getInstance().debug("Proxy works! Ping: " + to_string(sec->seconds_)  + "s");
+					} else {
+						std::cerr << "Proxy failed.\n";
+						UniqueLogger::getInstance().debug("Proxy failed!");
+					}
+				}
+			);
+        }
+	});
+
+	// Loading telegram
 	sender->send_query(td_api::make_object<td_api::getOption>("version"), {});
 }
 

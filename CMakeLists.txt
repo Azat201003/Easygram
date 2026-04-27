@@ -9,6 +9,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 find_package(Td REQUIRED)
 find_package(logger REQUIRED)
 find_package(ftxui REQUIRED)
+find_package(CLI11 REQUIRED)
 
 #include(FetchContent)
 
