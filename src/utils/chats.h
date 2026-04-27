@@ -30,16 +30,9 @@ public:
 	void addOrUpdateChat(int64_t chat_id, TdChat chat);
 	void updateChatTitle(int64_t chat_id, const std::string& title);
 	void updateChatPosition(int64_t chat_id, td_api::object_ptr<td_api::chatPosition> position);
+	void updateChatPositions(int64_t chat_id, std::vector<td_api::object_ptr<td_api::chatPosition>> positions);
 	std::vector<Chat> getSortedChats(int32_t chat_list_id);
-};
 
-class ChatPositionUpdateHandler : public UpdateHandler {
-public:
-	void update(td_api::Object&);
-};
-
-class NewChatUpdateHandler : public UpdateHandler {
-public:
-	void update(td_api::Object&);
+	bool updated;
 };
 

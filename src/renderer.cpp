@@ -33,7 +33,7 @@ Component getRenderer(ScreenInteractive &screen) {
         (*page) = 0;
       }
 			scenes[*page]->ping();
-      std::this_thread::sleep_for(100ms);
+      std::this_thread::sleep_for(50ms);
     }
   });
   static std::thread updater([] () {
