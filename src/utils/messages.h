@@ -11,6 +11,7 @@
 
 #include <utils/singleton.h>
 #include <telegram/facade.h>
+#include <mutex>
 
 
 typedef td_api::object_ptr<td_api::message> TdMessage;
@@ -29,6 +30,7 @@ public:
 	bool updated = false;
 	MessageManager();
 private:
+	std::mutex mtx_; // for chat_message_ids_
 	std::set<pair<int64_t, int64_t>> chat_message_ids_;
 	std::map<int64_t, int64_t> first_message_id_;
 	std::map<int64_t, std::deque<TdMessage>> messages_; // by chat_id

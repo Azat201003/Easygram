@@ -4,7 +4,7 @@
 #include <td/telegram/td_api.hpp>
 #include <map>
 #include <functional>
-#include <telegram/handlers.h>
+#include <telegram/responses.h>
 #include <logger/logger.h>
 
 namespace td_api = td::td_api;

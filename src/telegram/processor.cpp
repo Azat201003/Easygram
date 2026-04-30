@@ -29,7 +29,7 @@ Processor::Processor(HandlerManager* handler_manager_, TgSender* sender_) {
 }
 
 void Processor::add_update_handler(int32_t object_id, UpdateHandler* update_handler) {
-	update_handlers[object_id].push_back(update_handler);	
+	update_handlers[object_id] = update_handler;	
 }
 
 void Processor::process_response(td::ClientManager::Response response) {
@@ -45,9 +45,14 @@ void Processor::process_response(td::ClientManager::Response response) {
 }
 
 void Processor::process_update(Object update) {
-	for (UpdateHandler* update_handler : update_handlers[update->get_id()])
-		update_handler->update(*update);
+	auto handler = update_handlers.find(update->get_id());
+	if (handler != update_handlers.end() && handler->second != nullptr) {
+		handler->second->update(std::move(update));
+		return;
+	}
 
+	// TODO: to replace by handlers /|\ 
+	
 	td_api::downcast_call(
 		*update,
 		overloaded(

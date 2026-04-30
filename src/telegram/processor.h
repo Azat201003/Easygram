@@ -5,7 +5,7 @@
 #include <logger/logger.h>
 
 #include <telegram/sender.h>
-#include <telegram/handlers.h>
+#include <telegram/responses.h>
 
 #include <map>
 #include <vector>
@@ -16,7 +16,7 @@ using Object = td_api::object_ptr<td_api::Object>;
 
 class UpdateHandler {
 public:
-	virtual void update(td_api::Object&) = 0;
+	virtual void update(Object) = 0;
 };
 
 class Processor {
@@ -29,7 +29,7 @@ private:
 	Logger* logger;
 	TgSender* sender;
 	HandlerManager* handler_manager;
-	std::map<int32_t, std::vector<UpdateHandler*>> update_handlers; // by Function::ID
+	std::map<int32_t, UpdateHandler*> update_handlers; // by Function::ID
 public:
 	std::function<void(Object)> create_authentication_query_handler(string *error);
 	Processor(HandlerManager*, TgSender*);

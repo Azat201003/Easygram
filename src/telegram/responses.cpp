@@ -1,4 +1,4 @@
-#include <telegram/handlers.h>
+#include <telegram/responses.h>
 
 HandlerManager::HandlerManager() {
 	this->logger = &UniqueLogger::getInstance();

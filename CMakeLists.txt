@@ -1,6 +1,12 @@
 cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 project(Easygram VERSION 1.0 LANGUAGES CXX)
 
+set(MEMORYCHECK_COMMAND_OPTIONS "--trace-children=yes --leak-check=full")
+add_compile_options(-fsanitize=address -fno-omit-frame-pointer -g)
+add_link_options(-fsanitize=address)
+
+set(CMAKE_BUILD_TYPE Debug)
+
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -10,20 +16,6 @@ find_package(Td REQUIRED)
 find_package(logger REQUIRED)
 find_package(ftxui REQUIRED)
 find_package(CLI11 REQUIRED)
-
-#include(FetchContent)
-
-#set(FETCHCONTENT_UPDATES_DISCONNECTED ON)
-#set(FETCHCONTENT_QUIET OFF)
-
-#FetchContent_Declare(ftxui
-#  GIT_REPOSITORY https://github.com/arthursonzogni/ftxui.git
-#  GIT_TAG        v5.0.0
-# GIT_PROGRESS   TRUE
-#  GIT_SHALLOW    TRUE
-#  EXCLUDE_FROM_ALL
-#)
-#FetchContent_MakeAvailable(ftxui)
 
 include_directories(src)
 
@@ -38,7 +30,7 @@ add_executable(main
 
 	src/telegram/processor.cpp
 	src/telegram/sender.cpp
-	src/telegram/handlers.cpp
+	src/telegram/responses.cpp
 	src/telegram/facade.cpp
 
 	src/utils/chats.cpp
